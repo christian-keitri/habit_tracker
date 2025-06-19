@@ -57,14 +57,14 @@ class Phase3State extends State<Phase3> {
     return Scaffold(
       body: Stack(
         children: [
-         SizedBox(
-          width: double.infinity,
-          height: double.infinity,
-           child: Image.asset(
-            'assets/image/background3.png',
-               fit: BoxFit.cover,
+          SizedBox(
+            width: double.infinity,
+            height: double.infinity,
+            child: Image.asset(
+              'assets/image/background3.png',
+              fit: BoxFit.cover,
             ),
-              ),
+          ),
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -77,7 +77,8 @@ class Phase3State extends State<Phase3> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Color.fromARGB(255, 239, 241, 239)),
+                          icon: const Icon(Icons.arrow_back,
+                              color: Color.fromARGB(255, 239, 241, 239)),
                           onPressed: () {
                             Navigator.pop(context);
                           },
@@ -107,15 +108,18 @@ class Phase3State extends State<Phase3> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Colors.green), // or any color you prefer
-                       borderRadius: BorderRadius.circular(12),
-                    ),
+                        borderSide: const BorderSide(color: Colors.green),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
                   const Text(
                     'Choose Activity',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -149,7 +153,10 @@ class Phase3State extends State<Phase3> {
                   const SizedBox(height: 20),
                   const Text(
                     'Repetition Frequency',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 10),
                   ToggleButtons(
@@ -164,11 +171,12 @@ class Phase3State extends State<Phase3> {
                       });
                     },
                     color: Colors.white,
-                    selectedColor: const Color.fromARGB(255, 251, 252, 251),
+                    selectedColor: Colors.white,
                     fillColor: Colors.green,
                     children: _frequencyOptions.map((e) {
                       return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
                         child: Text(e),
                       );
                     }).toList(),
@@ -180,7 +188,10 @@ class Phase3State extends State<Phase3> {
                       children: [
                         const Text(
                           'Select Days of the Week',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white),
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white),
                         ),
                         const SizedBox(height: 10),
                         Wrap(
@@ -202,15 +213,20 @@ class Phase3State extends State<Phase3> {
                     ),
                   const Text(
                     'Set Reminder',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 10),
                   GestureDetector(
                     onTap: _pickReminderTime,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color.fromARGB(255, 27, 167, 45)),
+                        border: Border.all(
+                            color: const Color.fromARGB(255, 27, 167, 45)),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -220,7 +236,10 @@ class Phase3State extends State<Phase3> {
                           const SizedBox(width: 8),
                           Text(
                             _formatTimeOfDay(_reminderTime),
-                            style: const TextStyle(fontSize: 16,color: Colors.white,),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -230,13 +249,29 @@ class Phase3State extends State<Phase3> {
                   Center(
                     child: ElevatedButton(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Habit Added!')),
-                        );
+                        if (_habitNameController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Please enter a habit name.')),
+                          );
+                          return;
+                        }
+
+                        final newHabit = {
+                          'name': _habitNameController.text.trim(),
+                          'icon': _activityIcons[_selectedActivityIndex],
+                          'frequency': _frequencyOptions[_selectedFrequency],
+                          'days': _selectedDays,
+                          'reminder': _reminderTime,
+                        };
+
+                        Navigator.pop(context, newHabit);
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 17, 185, 53),
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                        backgroundColor:
+                            const Color.fromARGB(255, 17, 185, 53),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 40, vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
