@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:habit_tracker/screens/phase3.dart';
 
 class Phase2 extends StatefulWidget {
   const Phase2({super.key});
@@ -72,7 +73,7 @@ class Phase2State extends State<Phase2> {
                     },
                     calendarStyle: const CalendarStyle(
                       todayDecoration: BoxDecoration(
-                        color: Colors.greenAccent,
+                        color: Color.fromARGB(255, 32, 209, 56),
                         shape: BoxShape.circle,
                       ),
                       selectedDecoration: BoxDecoration(
@@ -142,8 +143,8 @@ class Phase2State extends State<Phase2> {
                               ),
                             )),
                         const SizedBox(height: 20),
-                        Row(
-                          children: const [
+                        const Row(
+                          children: [
                             Icon(Icons.local_drink, color: Colors.blue),
                             SizedBox(width: 8),
                             Text(
@@ -155,11 +156,17 @@ class Phase2State extends State<Phase2> {
                         const SizedBox(height: 20),
                         Center(
                           child: ElevatedButton.icon(
-                            onPressed: () {},
+                            onPressed: () {
+                               Navigator.push(
+                                 context,
+                                   MaterialPageRoute(builder: (context) => const Phase3()),
+                                   );
+
+                            },
                             icon: const Icon(Icons.add),
                             label: const Text('Add Habit'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.greenAccent,
+                              backgroundColor: const Color.fromARGB(255, 31, 226, 89),
                               foregroundColor: Colors.white,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 24, vertical: 12),
