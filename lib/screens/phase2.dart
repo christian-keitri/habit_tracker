@@ -116,7 +116,8 @@ class Phase2State extends State<Phase2> {
                       padding: const EdgeInsets.only(bottom: 80),
                       children: [
                         ...taskList.map((task) => Card(
-                             color: Colors.white.withAlpha((255 * 0.12).round()),
+                              // ignore: deprecated_member_use
+                              color: Colors.white.withOpacity(0.12),
                               elevation: 2,
                               margin: const EdgeInsets.symmetric(vertical: 6),
                               shape: RoundedRectangleBorder(
@@ -156,12 +157,20 @@ class Phase2State extends State<Phase2> {
                         const SizedBox(height: 20),
                         Center(
                           child: ElevatedButton.icon(
-                            onPressed: () {
-                               Navigator.push(
-                                 context,
-                                   MaterialPageRoute(builder: (context) => const Phase3()),
-                                   );
+                            onPressed: () async {
+                              final newHabit = await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const Phase3()),
+                              );
 
+                              if (newHabit != null) {
+                                setState(() {
+                                  taskList.add({
+                                    'title': newHabit['name'],
+                                    'progress': 0.0,
+                                  });
+                                });
+                              }
                             },
                             icon: const Icon(Icons.add),
                             label: const Text('Add Habit'),

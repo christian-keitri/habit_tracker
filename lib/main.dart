@@ -14,7 +14,7 @@ class HabitTrackerApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Habit Tracker',
       theme: ThemeData(primarySwatch: Colors.teal),
-      home: const Phase1(), // ✅ This shows Phase1 on startup
+      home:  Phase1(),
     );
   }
 }

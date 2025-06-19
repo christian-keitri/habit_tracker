@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/screens/phase2.dart';
 
-class Phase1 extends StatelessWidget {
+class Phase1 extends StatefulWidget {
+  // ignore: prefer_const_constructors_in_immutables
+  Phase1({super.key});
+
+  @override
+  State<Phase1> createState() => _Phase1State();
+}
+
+class _Phase1State extends State<Phase1> {
   final List<String> habitIcons = const [
     'icon1.png', 'icon2.png', 'icon3.png',
     'icon4.png', 'icon5.png', 'icon6.png',
     'icon7.png', 'icon8.png', 'icon9.png',
-    'icon10.png','icon11.png', 
+    'icon10.png', 'icon11.png', 'icon12.png',
   ];
 
-  const Phase1({super.key});
+  int? selectedIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -28,33 +36,37 @@ class Phase1 extends StatelessWidget {
             Expanded(
               child: GridView.count(
                 crossAxisCount: 3,
-                mainAxisSpacing: 16,
+                mainAxisSpacing: 12,
                 crossAxisSpacing: 16,
-                children: habitIcons.map((icon) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      // ignore: deprecated_member_use
-                      color: Colors.white.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          // ignore: deprecated_member_use
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 4,
-                          offset: const Offset(2, 2),
+                children: List.generate(habitIcons.length, (index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        selectedIndex = index;
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: selectedIndex == index
+                              ? Colors.green
+                              : Colors.transparent,
+                          width: 3,
                         ),
-                      ],
-                    ),
-                    child: Center(
-                      child: Image.asset(
-                        'assets/image/$icon',
-                        width: 40,
-                        height: 40,
-                        // Remove color tint unless you're sure all icons are monochromatic
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(
+                          'assets/image/${habitIcons[index]}',
+                          width: 40,
+                          height: 40,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   );
-                }).toList(),
+                }),
               ),
             ),
             const SizedBox(height: 24),
@@ -63,13 +75,13 @@ class Phase1 extends StatelessWidget {
               text: const TextSpan(
                 style: TextStyle(
                   color: Colors.white,
-                  fontFamily: 'Roboto',
+                  fontFamily: 'Just Me Again Down Here',
                   letterSpacing: 1.2,
                 ),
                 children: [
                   TextSpan(
                     text: 'MAKE IT A\n',
-                    style: TextStyle(fontSize: 24),
+                    style: TextStyle(fontSize: 24, color: Colors.black),
                   ),
                   TextSpan(
                     text: 'HABIT\n',
@@ -77,7 +89,7 @@ class Phase1 extends StatelessWidget {
                   ),
                   TextSpan(
                     text: 'TRACK IT',
-                    style: TextStyle(fontSize: 24),
+                    style: TextStyle(fontSize: 24, color: Colors.black),
                   ),
                 ],
               ),
@@ -86,17 +98,30 @@ class Phase1 extends StatelessWidget {
             const Text(
               "What are your habits?\nSelect your daily, weekly, or monthly habits.",
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(
+                  fontSize: 20,
+                  color: Color.fromARGB(255, 15, 14, 14),
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             Align(
               alignment: Alignment.bottomRight,
               child: GestureDetector(
                 onTap: () {
-                Navigator.push(
-  context,
-  MaterialPageRoute(builder: (context) => const Phase2()),
-);
+                  if (selectedIndex != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const Phase2(),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please select an icon first.'),
+                      ),
+                    );
+                  }
                 },
                 child: const Icon(
                   Icons.play_circle_fill,
