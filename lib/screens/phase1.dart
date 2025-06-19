@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/screens/phase2.dart';
 
 class Phase1 extends StatelessWidget {
   final List<String> habitIcons = const [
@@ -92,7 +93,10 @@ class Phase1 extends StatelessWidget {
               alignment: Alignment.bottomRight,
               child: GestureDetector(
                 onTap: () {
-                  Navigator.pushNamed(context, '/login');
+                Navigator.push(
+  context,
+  MaterialPageRoute(builder: (context) => const Phase2()),
+);
                 },
                 child: const Icon(
                   Icons.play_circle_fill,
