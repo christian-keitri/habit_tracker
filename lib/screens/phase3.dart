@@ -12,13 +12,22 @@ class Phase3State extends State<Phase3> {
   final TextEditingController _habitNameController = TextEditingController();
 
   int _selectedActivityIndex = 0;
-  final List<IconData> _activityIcons = [
-    Icons.card_giftcard,
-    Icons.message,
-    Icons.favorite,
-    Icons.directions_run,
-    Icons.home,
-  ];
+
+  // Image asset names for activity icons
+ final List<String> activityIconPaths = [
+  'assets/image/icon1.png',
+  'assets/image/icon2.png',
+  'assets/image/icon3.png',
+  'assets/image/icon4.png',
+  'assets/image/icon5.png',
+  'assets/image/icon6.png',
+  'assets/image/icon7.png',
+  'assets/image/icon8.png',
+  'assets/image/icon9.png',
+  'assets/image/icon10.png',
+  'assets/image/icon11.png',
+  'assets/image/icon12.png',
+];
 
   int _selectedFrequency = 0;
   final List<String> _frequencyOptions = ['Daily', 'Weekly', 'Monthly'];
@@ -122,34 +131,46 @@ class Phase3State extends State<Phase3> {
                         color: Colors.white),
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: List.generate(_activityIcons.length, (index) {
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedActivityIndex = index;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _selectedActivityIndex == index
-                                ? const Color.fromARGB(255, 23, 192, 37)
-                                : Colors.grey[300],
-                          ),
-                          child: Icon(
-                            _activityIcons[index],
-                            size: 32,
-                            color: _selectedActivityIndex == index
-                                ? Colors.white
-                                : Colors.black87,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
+
+                  // Use Image icons here
+                  Wrap(
+  spacing: 16,
+  runSpacing: 16,
+  alignment: WrapAlignment.center,
+  children: List.generate(activityIconPaths.length, (index) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedActivityIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: _selectedActivityIndex == index
+                ? Colors.greenAccent
+                : Colors.transparent,
+            width: 3,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.white.withAlpha(25),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            activityIconPaths[index],
+            width: 50,
+            height: 50,
+            fit: BoxFit.cover,
+          ),
+        ),
+      ),
+    );
+  }),
+),
+
+
                   const SizedBox(height: 20),
                   const Text(
                     'Repetition Frequency',
@@ -195,7 +216,7 @@ class Phase3State extends State<Phase3> {
                         ),
                         const SizedBox(height: 10),
                         Wrap(
-                          spacing: 8,
+                          spacing: 30,
                           children: List.generate(7, (index) {
                             return ChoiceChip(
                               label: Text(_days[index]),
@@ -257,13 +278,13 @@ class Phase3State extends State<Phase3> {
                           return;
                         }
 
-                        final newHabit = {
-                          'name': _habitNameController.text.trim(),
-                          'icon': _activityIcons[_selectedActivityIndex],
-                          'frequency': _frequencyOptions[_selectedFrequency],
-                          'days': _selectedDays,
-                          'reminder': _reminderTime,
-                        };
+                       final newHabit = {
+                       'name': _habitNameController.text.trim(),
+                       'icon': activityIconPaths[_selectedActivityIndex],
+                       'frequency': _frequencyOptions[_selectedFrequency],
+                       'days': _selectedDays,
+                       'reminder': _reminderTime,
+                                  };
 
                         Navigator.pop(context, newHabit);
                       },
