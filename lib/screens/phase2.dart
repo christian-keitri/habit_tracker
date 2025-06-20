@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:habit_tracker/screens/favorites.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:habit_tracker/screens/phase3.dart';
 import 'package:habit_tracker/screens/phase4.dart';
 import 'package:habit_tracker/screens/streaks.dart';
-
+import 'package:habit_tracker/global_data.dart' as global;
 
 class Phase2 extends StatefulWidget {
   const Phase2({super.key});
@@ -17,7 +18,8 @@ class Phase2State extends State<Phase2> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  final List<Map<String, dynamic>> taskList = [];
+
+  List<Map<String, dynamic>> get taskList => global.taskList;
 
   @override
   Widget build(BuildContext context) {
@@ -102,46 +104,58 @@ class Phase2State extends State<Phase2> {
                   ),
                   const SizedBox(height: 20),
                   Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    const Text(
-      'Your Daily Tasks',
-      style: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
-      ),
-    ),
-    Row(
-      children: [
-        IconButton(
-          icon: const Icon(Icons.local_fire_department, color: Colors.orange),
-          tooltip: 'Streaks',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const StreaksScreen()),
-            );
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.info_outline, color: Colors.white),
-          tooltip: 'Stats',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => Phase4()),
-            );
-          },
-        ),
-      ],
-    ),
-  ],
-),
-
-
-                
-
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Your Daily Tasks',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.star, color: Colors.amber),
+                            tooltip: 'Favorites',
+                            onPressed: () {
+                              final favorites = taskList
+                                  .where((task) => task['isFavorite'] == true)
+                                  .toList();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      FavoritesScreen(favorites: favorites),
+                                ),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.local_fire_department, color: Colors.orange),
+                            tooltip: 'Streaks',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const StreaksScreen()),
+                              );
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.info_outline, color: Colors.white),
+                            tooltip: 'Stats',
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => Phase4()),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 10),
                   Expanded(
                     child: Column(
@@ -152,8 +166,7 @@ class Phase2State extends State<Phase2> {
                                   child: Text(
                                     'No tasks yet.\nTap "Add Habit" to get started!',
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        color: Colors.white70, fontSize: 18),
+                                    style: TextStyle(color: Colors.white70, fontSize: 18),
                                   ),
                                 )
                               : ListView(
@@ -191,6 +204,19 @@ class Phase2State extends State<Phase2> {
                                                     fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
+                                              ),
+                                              IconButton(
+                                                icon: Icon(
+                                                  task['isFavorite']
+                                                      ? Icons.star
+                                                      : Icons.star_border,
+                                                  color: Colors.amber,
+                                                ),
+                                                onPressed: () {
+                                                  setState(() {
+                                                    task['isFavorite'] = !task['isFavorite'];
+                                                  });
+                                                },
                                               ),
                                               Text(
                                                 '${(task['progress'] * 100).round()}%',
@@ -235,8 +261,7 @@ class Phase2State extends State<Phase2> {
                             onPressed: () async {
                               final newHabit = await Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                    builder: (context) => const Phase3()),
+                                MaterialPageRoute(builder: (context) => const Phase3()),
                               );
 
                               if (newHabit != null) {
@@ -245,6 +270,7 @@ class Phase2State extends State<Phase2> {
                                     'title': newHabit['name'],
                                     'icon': newHabit['icon'],
                                     'progress': 0.0,
+                                    'isFavorite': false, // ⭐ Add favorite field
                                   });
                                 });
                               }
@@ -254,8 +280,7 @@ class Phase2State extends State<Phase2> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color.fromARGB(255, 31, 226, 89),
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                               textStyle: const TextStyle(fontSize: 16),
                             ),
                           ),
