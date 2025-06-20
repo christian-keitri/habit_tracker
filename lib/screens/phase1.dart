@@ -32,105 +32,116 @@ class _Phase1State extends State<Phase1> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 3,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 16,
-                children: List.generate(habitIcons.length, (index) {
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedIndex = index;
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: selectedIndex == index
-                              ? Colors.green
-                              : Colors.transparent,
-                          width: 3,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          'assets/image/${habitIcons[index]}',
-                          width: 40,
-                          height: 40,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+            
+            GridView.count(
+              crossAxisCount: 6,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 16,
+              children: List.generate(6, (index) {
+                return buildIcon(index);
+              }),
+            ),
+
+            const Spacer(),
+
+            // Middle motivational text and play button
+            Column(
+              children: [
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: const TextSpan(
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'Just Me Again Down Here',
+                      letterSpacing: 1.2,
                     ),
-                  );
-                }),
-              ),
-            ),
-            const SizedBox(height: 24),
-            RichText(
-              textAlign: TextAlign.center,
-              text: const TextSpan(
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Just Me Again Down Here',
-                  letterSpacing: 1.2,
-                ),
-                children: [
-                  TextSpan(
-                    text: 'MAKE IT A\n',
-                    style: TextStyle(fontSize: 24, color: Colors.black),
-                  ),
-                  TextSpan(
-                    text: 'HABIT\n',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                  ),
-                  TextSpan(
-                    text: 'TRACK IT',
-                    style: TextStyle(fontSize: 24, color: Colors.black),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "What are your habits?\nSelect your daily, weekly, or monthly habits.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 20,
-                  color: Color.fromARGB(255, 15, 14, 14),
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: GestureDetector(
-                onTap: () {
-                  if (selectedIndex != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Phase2(),
+                    children: [
+                      TextSpan(
+                        text: 'MAKE IT A\n',
+                        style: TextStyle(fontSize: 24, color: Colors.black),
                       ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please select an icon first.'),
+                      TextSpan(
+                        text: 'HABIT\n',
+                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                       ),
-                    );
-                  }
-                },
-                child: const Icon(
-                  Icons.play_circle_fill,
-                  size: 56,
-                  color: Color(0xFF01522B),
+                      TextSpan(
+                        text: 'TRACK IT',
+                        style: TextStyle(fontSize: 24, color: Colors.black),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+                const SizedBox(height: 20),
+                const Text(
+                  "What are your habits?\nSelect your daily, weekly, or monthly habits.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      fontSize: 20,
+                      color: Color.fromARGB(255, 15, 14, 14),
+                      fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                              onTap: () {
+                              Navigator.push(
+                               context,
+                                 MaterialPageRoute(builder: (context) => const Phase2()),
+                             );
+                           },
+
+                  child: const Icon(
+                    Icons.add_circle,
+                    size: 56,
+                    color: Color.fromARGB(255, 17, 17, 17),
+                  ),
+                ),
+              ],
+            ),
+
+            const Spacer(),
+
+            // Bottom 4 icons
+            GridView.count(
+              crossAxisCount: 6,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 16,
+              children: List.generate(6, (index) {
+                return buildIcon(index + 6);
+              }),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildIcon(int index) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedIndex = index;
+        });
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: selectedIndex == index ? Colors.green : Colors.transparent,
+            width: 3,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.asset(
+            'assets/image/${habitIcons[index]}',
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+          ),
         ),
       ),
     );

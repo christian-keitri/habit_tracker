@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:habit_tracker/screens/phase3.dart';
+import 'package:habit_tracker/screens/phase4.dart';
 
 class Phase2 extends StatefulWidget {
   const Phase2({super.key});
@@ -14,11 +15,7 @@ class Phase2State extends State<Phase2> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  final List<Map<String, dynamic>> taskList = [
-    {'title': 'Morning Run', 'progress': 0.7},
-    {'title': 'Read a Book', 'progress': 0.5},
-    {'title': 'Meditation', 'progress': 0.9},
-  ];
+  final List<Map<String, dynamic>> taskList = [];
 
   @override
   Widget build(BuildContext context) {
@@ -102,57 +99,120 @@ class Phase2State extends State<Phase2> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
-                    'Your Daily Tasks',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
+                  Row(
+                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                           children: [
+                           const Text(
+                            'Your Daily Tasks',
+                           style: TextStyle(
+                           fontSize: 20,
+                               fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                        ),
+                      ),
+                             IconButton(
+                  icon: const Icon(Icons.info_outline, color: Colors.white),
+                               onPressed: () {
+                         Navigator.push(
+                        context,
+                    MaterialPageRoute(builder: (context) => Phase4()),
+                                 );
+                            },
+                         ),
+                         ],
+                            ),
+
+
+
+
+                
+
                   const SizedBox(height: 10),
                   Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.only(bottom: 80),
+                    child: Column(
                       children: [
-                        ...taskList.map((task) => Card(
-                              // ignore: deprecated_member_use
-                              color: Colors.white.withOpacity(0.12),
-                              elevation: 2,
-                              margin: const EdgeInsets.symmetric(vertical: 6),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: ListTile(
-                                title: Text(task['title'],
-                                    style: const TextStyle(color: Colors.white)),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const SizedBox(height: 8),
-                                    LinearProgressIndicator(
-                                      value: task['progress'],
-                                      backgroundColor: Colors.grey.shade300,
-                                      color: Colors.greenAccent,
+                        Expanded(
+                          child: taskList.isEmpty
+                              ? const Center(
+                                  child: Text(
+                                    'No tasks yet.\nTap "Add Habit" to get started!',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: Colors.white70, fontSize: 18),
+                                  ),
+                                )
+                              : ListView(
+                                  padding: const EdgeInsets.only(bottom: 20),
+                                  children: taskList.map((task) => Card(
+                                    color: Colors.white.withAlpha(30),
+                                    elevation: 2,
+                                    margin: const EdgeInsets.symmetric(vertical: 6),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                  ],
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              if (task['icon'] != null)
+                                                Padding(
+                                                  padding: const EdgeInsets.only(right: 12.0),
+                                                  child: Image.asset(
+                                                    task['icon'],
+                                                    width: 30,
+                                                    height: 30,
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                ),
+                                              Expanded(
+                                                child: Text(
+                                                  task['title'],
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ),
+                                              Text(
+                                                '${(task['progress'] * 100).round()}%',
+                                                style: const TextStyle(color: Colors.white),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 10),
+                                          LinearProgressIndicator(
+                                            value: task['progress'],
+                                            backgroundColor: Colors.grey.shade300,
+                                            color: const Color.fromARGB(255, 91, 233, 55),
+                                          ),
+                                          const SizedBox(height: 10),
+                                          Align(
+                                            alignment: Alignment.centerRight,
+                                            child: TextButton.icon(
+                                              onPressed: () {
+                                                setState(() {
+                                                  task['progress'] += 0.3;
+                                                  if (task['progress'] > 1.0) {
+                                                    task['progress'] = 1.0;
+                                                  }
+                                                });
+                                              },
+                                              icon: const Icon(Icons.check_circle_outline, color: Color.fromARGB(255, 34, 235, 44)),
+                                              label: const Text(
+                                                'Mark as Done',
+                                                style: TextStyle(color: Color.fromARGB(255, 243, 245, 243)),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )).toList(),
                                 ),
-                                trailing: Text(
-                                  '${(task['progress'] * 100).round()}%',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            )),
-                        const SizedBox(height: 20),
-                        const Row(
-                          children: [
-                            Icon(Icons.local_drink, color: Colors.blue),
-                            SizedBox(width: 8),
-                            Text(
-                              'Water Intake: 500 ml',
-                              style: TextStyle(fontSize: 16, color: Colors.white),
-                            ),
-                          ],
                         ),
                         const SizedBox(height: 20),
                         Center(
@@ -160,13 +220,15 @@ class Phase2State extends State<Phase2> {
                             onPressed: () async {
                               final newHabit = await Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const Phase3()),
+                                MaterialPageRoute(
+                                    builder: (context) => const Phase3()),
                               );
 
                               if (newHabit != null) {
                                 setState(() {
                                   taskList.add({
                                     'title': newHabit['name'],
+                                    'icon': newHabit['icon'],
                                     'progress': 0.0,
                                   });
                                 });
