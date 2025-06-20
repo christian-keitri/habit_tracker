@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:habit_tracker/screens/phase3.dart';
 import 'package:habit_tracker/screens/phase4.dart';
+import 'package:habit_tracker/screens/streaks.dart';
+
 
 class Phase2 extends StatefulWidget {
   const Phase2({super.key});
@@ -100,29 +102,42 @@ class Phase2State extends State<Phase2> {
                   ),
                   const SizedBox(height: 20),
                   Row(
-                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                           children: [
-                           const Text(
-                            'Your Daily Tasks',
-                           style: TextStyle(
-                           fontSize: 20,
-                               fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                        ),
-                      ),
-                             IconButton(
-                  icon: const Icon(Icons.info_outline, color: Colors.white),
-                               onPressed: () {
-                         Navigator.push(
-                        context,
-                    MaterialPageRoute(builder: (context) => Phase4()),
-                                 );
-                            },
-                         ),
-                         ],
-                            ),
-
-
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    const Text(
+      'Your Daily Tasks',
+      style: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+    ),
+    Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.local_fire_department, color: Colors.orange),
+          tooltip: 'Streaks',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const StreaksScreen()),
+            );
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.info_outline, color: Colors.white),
+          tooltip: 'Stats',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Phase4()),
+            );
+          },
+        ),
+      ],
+    ),
+  ],
+),
 
 
                 
