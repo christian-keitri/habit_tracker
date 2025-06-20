@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:habit_tracker/global_data.dart' as global;
+import 'package:habit_tracker/screens/favorites.dart';
 import 'package:habit_tracker/screens/phase1.dart';
 import 'package:habit_tracker/screens/phase2.dart';
 import 'package:habit_tracker/screens/phase3.dart';
@@ -45,61 +47,7 @@ class Phase4 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     drawer: Drawer(
-  child: Stack(
-    children: [
-      Positioned.fill(
-        child: Image.asset(
-          'assets/image/drawer.avif', // Replace with your image path
-          fit: BoxFit.cover,
-        ),
-      ),
-      ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.transparent, // Let the image show through
-            ),
-            child: Text(
-              'Menu',
-              style: TextStyle(color: Colors.white, fontSize: 24),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.check, color: Colors.white),
-            title: const Text('Your Daily Task', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const Phase2()));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.add_task, color: Colors.white),
-            title: const Text('Add Task', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const Phase3()));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.local_fire_department, color: Colors.white),
-            title: const Text('Streaks', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const StreaksScreen()));
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.exit_to_app, color: Colors.white),
-            title: const Text('Exit', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context) => Phase1()));
-            },
-          ),
-        ],
-      ),
-    ],
-  ),
-),
-
+      drawer: _buildDrawer(context),
       body: Stack(
         children: [
           Positioned.fill(
@@ -180,6 +128,78 @@ class Phase4 extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/image/drawer.avif',
+              fit: BoxFit.cover,
+            ),
+          ),
+          ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(color: Colors.transparent),
+                child: Text(
+                  'Menu',
+                  style: TextStyle(color: Colors.white, fontSize: 24),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.check, color: Colors.white),
+                title: const Text('Your Daily Task', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const Phase2()));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.add_task, color: Colors.white),
+                title: const Text('Add Task', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const Phase3()));
+                },
+              ),
+              ListTile(
+                  leading: const Icon(Icons.favorite, color: Colors.white),
+                  title: const Text('Favorites', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    final favorites = global.taskList
+                        .where((task) => task['isFavorite'] == true)
+                        .toList();
+
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FavoritesScreen(favorites: favorites),
+                      ),
+                    );
+                  },
+                ),
+
+              ListTile(
+                leading: const Icon(Icons.local_fire_department, color: Colors.white),
+                title: const Text('Streaks', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const StreaksScreen()));
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.exit_to_app, color: Colors.white),
+                title: const Text('Exit', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => Phase1()));
+                },
+              ),
+            ],
           ),
         ],
       ),
