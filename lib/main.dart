@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
-import 'screens/phase1.dart'; // Make sure this path is correct
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:habit_tracker/screens/habit.dart'; // Adjust if your path differs
+import 'screens/phase1.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Hive & register the Habit model
+  await Hive.initFlutter();
+  Hive.registerAdapter(HabitAdapter());
+
+  // Open the box to store Habit objects
+  await Hive.openBox<Habit>('habits');
+
   runApp(const HabitTrackerApp());
 }
 

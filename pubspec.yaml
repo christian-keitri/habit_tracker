@@ -10,15 +10,21 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  intl: ^0.18.1
+  intl: ^0.20.2
   cupertino_icons: ^1.0.8
   table_calendar: ^3.0.8
-  fl_chart: ^0.66.0  # Or latest version
+  fl_chart: ^1.0.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  path_provider: ^2.0.12
+  logger: ^2.0.2   # ✅ <-- Add this line
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.0
+  flutter_lints: ^6.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.5
 
 flutter:
   uses-material-design: true
