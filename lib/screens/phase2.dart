@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:habit_tracker/screens/favorites.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:habit_tracker/screens/favorites.dart';
 import 'package:habit_tracker/screens/phase3.dart';
 import 'package:habit_tracker/screens/phase4.dart';
 import 'package:habit_tracker/screens/streaks.dart';
-import 'package:habit_tracker/global_data.dart' as global;
+import 'package:habit_tracker/screens/habit.dart';
+import 'package:logger/logger.dart';
 
 class Phase2 extends StatefulWidget {
   const Phase2({super.key});
@@ -14,15 +16,26 @@ class Phase2 extends StatefulWidget {
 }
 
 class Phase2State extends State<Phase2> {
+  final logger = Logger();
+
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  late Box<Habit> habitBox;
 
+  @override
+  void initState() {
+    super.initState();
+    habitBox = Hive.box<Habit>('habits');
+    _selectedDay = _focusedDay;
+  }
 
-  List<Map<String, dynamic>> get taskList => global.taskList;
+  String _formatDate(DateTime date) => '${date.year}-${date.month}-${date.day}';
 
   @override
   Widget build(BuildContext context) {
+    final taskList = habitBox.values.toList();
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -39,10 +52,7 @@ class Phase2State extends State<Phase2> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              'assets/image/background2.png',
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/image/background2.png', fit: BoxFit.cover),
           ),
           SafeArea(
             child: Padding(
@@ -63,11 +73,9 @@ class Phase2State extends State<Phase2> {
                       });
                     },
                     onFormatChanged: (format) {
-                      if (_calendarFormat != format) {
-                        setState(() {
-                          _calendarFormat = format;
-                        });
-                      }
+                      setState(() {
+                        _calendarFormat = format;
+                      });
                     },
                     onPageChanged: (focusedDay) {
                       _focusedDay = focusedDay;
@@ -121,13 +129,19 @@ class Phase2State extends State<Phase2> {
                             tooltip: 'Favorites',
                             onPressed: () {
                               final favorites = taskList
-                                  .where((task) => task['isFavorite'] == true)
+                                  .where((task) => task.isFavorite)
+                                  .map((task) => {
+                                        'title': task.title,
+                                        'icon': task.icon,
+                                        'progress': task.progress,
+                                        'isFavorite': task.isFavorite,
+                                        'isBad': task.isBad,
+                                      })
                                   .toList();
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      FavoritesScreen(favorites: favorites),
+                                  builder: (context) => FavoritesScreen(favorites: favorites),
                                 ),
                               );
                             },
@@ -158,134 +172,116 @@ class Phase2State extends State<Phase2> {
                   ),
                   const SizedBox(height: 10),
                   Expanded(
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: taskList.isEmpty
-                              ? const Center(
-                                  child: Text(
-                                    'No tasks yet.\nTap "Add Habit" to get started!',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(color: Colors.white70, fontSize: 18),
-                                  ),
-                                )
-                              : ListView(
-                                  padding: const EdgeInsets.only(bottom: 20),
-                                  children: taskList.map((task) => Card(
-                                    color: Colors.white.withAlpha(30),
-                                    elevation: 2,
-                                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    child: ValueListenableBuilder(
+                      valueListenable: habitBox.listenable(),
+                      builder: (context, Box<Habit> box, _) {
+                        final habits = box.values.toList();
+                        final selectedDate = _selectedDay ?? DateTime.now();
+                        final todayKey = _formatDate(selectedDate);
+
+                        return habits.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'No tasks yet.\nTap "Add Habit" to get started!',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(color: Colors.white70, fontSize: 18),
+                                ),
+                              )
+                            : ListView.builder(
+                                itemCount: habits.length,
+                                itemBuilder: (context, index) {
+                                  final task = habits[index];
+                                  final isChecked = task.dailyProgress[todayKey] == 1.0;
+
+                                  return CheckboxListTile(
+                                    value: isChecked,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        task.dailyProgress[todayKey] = value == true ? 1.0 : 0.0;
+                                        task.save();
+                                        logger.i('Checkbox updated: ${task.title} = ${value == true ? 1.0 : 0.0}');
+                                      });
+                                    },
+                                    title: Row(
+                                      children: [
+                                        if (task.icon.isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.only(right: 12.0),
+                                            child: Image.asset(
+                                              task.icon,
+                                              width: 30,
+                                              height: 30,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        Expanded(
+                                          child: Text(
+                                            task.title,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            task.isFavorite ? Icons.star : Icons.star_border,
+                                            color: Colors.amber,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              task.isFavorite = !task.isFavorite;
+                                              task.save();
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    activeColor: task.isBad ? Colors.red : Colors.green,
+                                    tileColor: Colors.white.withAlpha(30),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(12.0),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              if (task['icon'] != null)
-                                                Padding(
-                                                  padding: const EdgeInsets.only(right: 12.0),
-                                                  child: Image.asset(
-                                                    task['icon'],
-                                                    width: 30,
-                                                    height: 30,
-                                                    fit: BoxFit.cover,
-                                                  ),
-                                                ),
-                                              Expanded(
-                                                child: Text(
-                                                  task['title'],
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
-                                                ),
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  task['isFavorite']
-                                                      ? Icons.star
-                                                      : Icons.star_border,
-                                                  color: Colors.amber,
-                                                ),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    task['isFavorite'] = !task['isFavorite'];
-                                                  });
-                                                },
-                                              ),
-                                              Text(
-                                                '${(task['progress'] * 100).round()}%',
-                                                style: const TextStyle(color: Colors.white),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 10),
-                                          LinearProgressIndicator(
-                                            value: task['progress'],
-                                            backgroundColor: Colors.grey.shade300,
-                                            color: const Color.fromARGB(255, 91, 233, 55),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          Align(
-                                            alignment: Alignment.centerRight,
-                                            child: TextButton.icon(
-                                              onPressed: () {
-                                                setState(() {
-                                                  task['progress'] += 0.3;
-                                                  if (task['progress'] > 1.0) {
-                                                    task['progress'] = 1.0;
-                                                  }
-                                                });
-                                              },
-                                              icon: const Icon(Icons.check_circle_outline, color: Color.fromARGB(255, 34, 235, 44)),
-                                              label: const Text(
-                                                'Mark as Done',
-                                                style: TextStyle(color: Color.fromARGB(255, 243, 245, 243)),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )).toList(),
-                                ),
-                        ),
-                        const SizedBox(height: 20),
-                        Center(
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              final newHabit = await Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const Phase3()),
+                                    checkColor: Colors.black,
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  );
+                                },
                               );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        logger.i("Hello! Button Pressed");
+                        final newHabit = await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const Phase3()),
+                        );
 
-                              if (newHabit != null) {
-                                setState(() {
-                                  taskList.add({
-                                    'title': newHabit['name'],
-                                    'icon': newHabit['icon'],
-                                    'progress': 0.0,
-                                    'isFavorite': false, // ⭐ Add favorite field
-                                  });
-                                });
-                              }
-                            },
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add Habit'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(255, 31, 226, 89),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                              textStyle: const TextStyle(fontSize: 16),
-                            ),
-                          ),
-                        ),
-                      ],
+                        if (newHabit != null) {
+                          final newHabitObj = Habit(
+                            title: newHabit['name'],
+                            icon: newHabit['icon'],
+                            progress: 0.0,
+                            isFavorite: false,
+                            isBad: false,
+                            dailyProgress: {},
+                          );
+
+                          habitBox.add(newHabitObj);
+                        }
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Habit'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 31, 226, 89),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        textStyle: const TextStyle(fontSize: 16),
+                      ),
                     ),
                   ),
                 ],

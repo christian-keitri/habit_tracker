@@ -1,4 +1,9 @@
 // lib/global_data.dart
-library global_data;
+library;
 
-List<Map<String, dynamic>> taskList = [];
+import 'package:hive/hive.dart';
+import 'screens/habit.dart';
+
+class GlobalData {
+  static Box<Habit> get habitBox => Hive.box<Habit>('habits');
+}

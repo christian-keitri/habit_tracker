@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:habit_tracker/screens/habit.dart';
 
 class StreaksScreen extends StatelessWidget {
   const StreaksScreen({super.key});
@@ -16,8 +18,20 @@ class StreaksScreen extends StatelessWidget {
     "“You are not your bad habits. You are the person who can change them.”",
   ];
 
+  int calculateTotalStreak(List<Habit> habits) {
+    int total = 0;
+    for (var habit in habits) {
+      total += habit.getStreak();
+    }
+    return total;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final habitBox = Hive.box<Habit>('habits');
+    final habits = habitBox.values.toList();
+    final totalStreak = calculateTotalStreak(habits);
+
     final random = Random();
     final quote = quotes[random.nextInt(quotes.length)];
 
@@ -33,7 +47,7 @@ class StreaksScreen extends StatelessWidget {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/image/qoutes.png', 
+              'assets/image/qoutes.png',
               fit: BoxFit.cover,
             ),
           ),
@@ -45,9 +59,9 @@ class StreaksScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.local_fire_department, size: 100, color: Colors.orange),
                   const SizedBox(height: 20),
-                  const Text(
-                    'You’re on a 5-day streak!',
-                    style: TextStyle(
+                  Text(
+                    'You’re on a $totalStreak-day streak!',
+                    style: const TextStyle(
                       color: Color.fromARGB(224, 17, 17, 16),
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -65,7 +79,7 @@ class StreaksScreen extends StatelessWidget {
                   const Divider(color: Colors.white38),
                   const SizedBox(height: 16),
                   const Text(
-                    'Daily Qoutes',
+                    'Daily Quotes',
                     style: TextStyle(
                       color: Color.fromARGB(255, 14, 14, 13),
                       fontSize: 18,
