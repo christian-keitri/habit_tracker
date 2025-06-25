@@ -13,10 +13,11 @@ class FavoritesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dailyRoutines = favorites.where((habit) => habit.dailyProgress.isNotEmpty).toList();
-    final favoriteOnly = favorites
-        .where((habit) => habit.dailyProgress.isEmpty)
-        .toList();
+    final dailyRoutines = favorites.where((h) => h.isDailyRoutine).toList();
+    final weeklyRoutines = favorites.where((h) => h.isWeeklyRoutine).toList();
+    final monthlyRoutines = favorites.where((h) => h.isMonthlyRoutine).toList();
+    final favoriteOnly = favorites.where((h) =>
+        !h.isDailyRoutine && !h.isWeeklyRoutine && !h.isMonthlyRoutine).toList();
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -46,31 +47,19 @@ class FavoritesScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     children: [
                       if (dailyRoutines.isNotEmpty) ...[
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                          child: Text(
-                            'Daily Routines',
-                            style: TextStyle(
-                              color: Colors.greenAccent,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                        const _SectionTitle(title: 'Daily Routines', color: Colors.greenAccent),
                         ...dailyRoutines.map((habit) => _buildHabitCard(context, habit)),
                       ],
+                      if (weeklyRoutines.isNotEmpty) ...[
+                        const _SectionTitle(title: 'Weekly Routines', color: Colors.blueAccent),
+                        ...weeklyRoutines.map((habit) => _buildHabitCard(context, habit)),
+                      ],
+                      if (monthlyRoutines.isNotEmpty) ...[
+                        const _SectionTitle(title: 'Monthly Routines', color: Colors.orangeAccent),
+                        ...monthlyRoutines.map((habit) => _buildHabitCard(context, habit)),
+                      ],
                       if (favoriteOnly.isNotEmpty) ...[
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
-                          child: Text(
-                            'Favorites',
-                            style: TextStyle(
-                              color: Colors.amber,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
+                        const _SectionTitle(title: 'Favorites', color: Colors.amber),
                         ...favoriteOnly.map((habit) => _buildHabitCard(context, habit)),
                       ],
                     ],
@@ -83,18 +72,28 @@ class FavoritesScreen extends StatelessWidget {
 
   Widget _buildHabitCard(BuildContext context, Habit habit) {
     final completedDays = habit.dailyProgress.values
-    .map((v) => v.toDouble())
-    .where((v) => v >= 1.0)
-    .length;
+        .map((v) => v.toDouble())
+        .where((v) => v >= 1.0)
+        .length;
 
     return Card(
       color: Colors.white.withAlpha(25),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
-        leading: Icon(
-          habit.dailyProgress.isNotEmpty ? Icons.repeat : Icons.star,
-          color: habit.dailyProgress.isNotEmpty ? Colors.greenAccent : Colors.amber,
-        ),
+        leading: habit.iconPath.isNotEmpty
+            ? Image.asset(habit.iconPath, width: 32, height: 32)
+            : Icon(
+                habit.isDailyRoutine || habit.isWeeklyRoutine || habit.isMonthlyRoutine
+                    ? Icons.repeat
+                    : Icons.star,
+                color: habit.isDailyRoutine
+                    ? Colors.greenAccent
+                    : habit.isWeeklyRoutine
+                        ? Colors.blueAccent
+                        : habit.isMonthlyRoutine
+                            ? Colors.orangeAccent
+                            : Colors.amber,
+              ),
         title: Text(
           habit.title,
           style: const TextStyle(color: Colors.white),
@@ -166,6 +165,31 @@ class FavoritesScreen extends StatelessWidget {
             child: const Text('Save'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String title;
+  final Color color;
+
+  const _SectionTitle({
+    required this.title,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: color,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

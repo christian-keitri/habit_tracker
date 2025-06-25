@@ -24,14 +24,15 @@ class HabitAdapter extends TypeAdapter<Habit> {
       isWeeklyRoutine: fields[4] as bool,
       isMonthlyRoutine: fields[5] as bool,
       isFavorite: fields[6] as bool,
-      dailyProgress: (fields[7] as Map?)?.cast<String, double>(),
+      dailyGoal: fields[8] as int?,
+      dailyProgress: (fields[7] as Map?)?.cast<String, int>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, Habit obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -47,7 +48,9 @@ class HabitAdapter extends TypeAdapter<Habit> {
       ..writeByte(6)
       ..write(obj.isFavorite)
       ..writeByte(7)
-      ..write(obj.dailyProgress);
+      ..write(obj.dailyProgress)
+      ..writeByte(8)
+      ..write(obj.dailyGoal);
   }
 
   @override

@@ -24,9 +24,9 @@ class _Phase2State extends State<Phase2> {
     _selectedDay = _focusedDay;
   }
 
-  void _toggleHabit(Habit habit, bool? value) {
+  void _updateHabitProgress(Habit habit, int newValue) {
     final key = '${_selectedDay!.year}-${_selectedDay!.month}-${_selectedDay!.day}';
-    habit.dailyProgress[key] = (value ?? false) ? 1.0 : 0.0;
+    habit.dailyProgress[key] = newValue;
     habit.save();
     setState(() {});
   }
@@ -106,73 +106,69 @@ class _Phase2State extends State<Phase2> {
                         itemBuilder: (ctx, i) {
                           final habit = habits[i];
                           final key = '${_selectedDay!.year}-${_selectedDay!.month}-${_selectedDay!.day}';
-                          final done = (habit.dailyProgress[key] ?? 0.0) >= 1.0;
+                          final currentValue = habit.dailyProgress[key] ?? 0;
+
                           return Card(
                             color: Colors.white.withAlpha(25),
                             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                             child: ListTile(
-                              // 1) Show the icon if set:
                               leading: habit.iconPath.isNotEmpty
                                   ? Image.asset(habit.iconPath, width: 32, height: 32)
                                   : null,
                               title: Text(habit.title, style: const TextStyle(color: Colors.white)),
-                              subtitle: Row(
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // 2) Your checkbox:
-                                  Checkbox(
-                                    value: done,
-                                    onChanged: (v) => _toggleHabit(habit, v),
-                                    activeColor: Colors.green,
-                                  ),
-                                  // 3) Favorite button:
-                                  IconButton(
-                                    icon: Icon(
-                                      habit.isFavorite ? Icons.favorite : Icons.favorite_border,
-                                      color: habit.isFavorite ? Colors.red : Colors.white54,
-                                    ),
-                                    onPressed: () => _toggleFavorite(habit),
-                                  ),
-                                  // 4) Routine badges:
-                                 Row(
-                                  children: [
-                                    if (habit.isDailyRoutine)
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 4),
-                                        child: Text(
-                                          'Daily',
-                                          style: TextStyle(
-                                            color: Color.fromARGB(255, 54, 185, 76),      // choose whatever color you like
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.remove, color: Colors.white),
+                                        onPressed: () {
+                                          if (currentValue > 0) {
+                                            _updateHabitProgress(habit, currentValue - 1);
+                                          }
+                                        },
                                       ),
+                                      Text(
+                                        '$currentValue / ${habit.dailyGoal}',
+                                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.add, color: Colors.white),
+                                        onPressed: () {
+                                          if (currentValue < (habit.dailyGoal ?? 1)) {
+                                            _updateHabitProgress(habit, currentValue + 1);
+                                          }
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          habit.isFavorite ? Icons.favorite : Icons.favorite_border,
+                                          color: habit.isFavorite ? Colors.red : Colors.white54,
+                                        ),
+                                        onPressed: () => _toggleFavorite(habit),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      if (habit.isDailyRoutine)
+                                        const Padding(
+                                          padding: EdgeInsets.only(right: 8),
+                                          child: Text('Daily', style: TextStyle(color: Colors.greenAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                                        ),
                                       if (habit.isWeeklyRoutine)
                                         const Padding(
-                                          padding: EdgeInsets.only(left: 4),
-                                          child: Text(
-                                            'Weekly',
-                                            style: TextStyle(
-                                              color: Colors.lightBlueAccent,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
+                                          padding: EdgeInsets.only(right: 8),
+                                          child: Text('Weekly', style: TextStyle(color: Colors.lightBlueAccent, fontSize: 12, fontWeight: FontWeight.bold)),
                                         ),
                                       if (habit.isMonthlyRoutine)
                                         const Padding(
-                                          padding: EdgeInsets.only(left: 4),
-                                          child: Text(
-                                            'Monthly',
-                                            style: TextStyle(
-                                              color: Colors.orangeAccent,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
+                                          padding: EdgeInsets.only(right: 8),
+                                          child: Text('Monthly', style: TextStyle(color: Colors.orangeAccent, fontSize: 12, fontWeight: FontWeight.bold)),
                                         ),
                                     ],
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
@@ -195,64 +191,59 @@ class _Phase2State extends State<Phase2> {
     );
   }
 
-Drawer _buildDrawer(BuildContext context, List<Habit> habits) {
-  return Drawer(
-    child: Stack(
-      children: [
-        Positioned.fill(child: Image.asset('assets/image/drawer.avif', fit: BoxFit.cover)),
-        ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.transparent),
-              child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
-            ),
-            ListTile(
-              leading: const Icon(Icons.favorite, color: Colors.white),
-              title: const Text('Favorites', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                final favs = habits.where((h) => h.isFavorite).toList();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FavoritesScreen(
-                      favorites: favs,
-                      onDelete: (h) {
-                        h.delete();
-                        setState(() {});
-                      },
+  Drawer _buildDrawer(BuildContext context, List<Habit> habits) {
+    return Drawer(
+      child: Stack(
+        children: [
+          Positioned.fill(child: Image.asset('assets/image/drawer.avif', fit: BoxFit.cover)),
+          ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(color: Colors.transparent),
+                child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.favorite, color: Colors.white),
+                title: const Text('Favorites', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  final favs = habits.where((h) => h.isFavorite).toList();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FavoritesScreen(
+                        favorites: favs,
+                        onDelete: (h) {
+                          h.delete();
+                          setState(() {});
+                        },
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.analytics, color: Colors.white),
-              title: const Text('Stats', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                if (habits.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No habits available for stats.")));
-                } else {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => Phase4(habits: habits)));
-                }
-              },
-            ),
-
-            // ✅ NEW: Streaks Menu Item
-            ListTile(
-              leading: const Icon(Icons.local_fire_department, color: Colors.orange),
-              title: const Text('Streaks', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const StreaksScreen()),
-                );
-              },
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
- }
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.analytics, color: Colors.white),
+                title: const Text('Stats', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  if (habits.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("No habits available for stats.")));
+                  } else {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => Phase4(habits: habits)));
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.local_fire_department, color: Colors.orange),
+                title: const Text('Streaks', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const StreaksScreen()));
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
