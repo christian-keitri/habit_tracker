@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:habit_tracker/screens/phase2.dart';
 
 class Phase1 extends StatefulWidget {
-  // ignore: prefer_const_constructors_in_immutables
-  Phase1({super.key});
+  const Phase1({super.key});
 
   @override
   State<Phase1> createState() => _Phase1State();
@@ -32,21 +31,19 @@ class _Phase1State extends State<Phase1> {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
         child: Column(
           children: [
-            
+            // Top 6 icons
             GridView.count(
               crossAxisCount: 6,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: 12,
               crossAxisSpacing: 16,
-              children: List.generate(6, (index) {
-                return buildIcon(index);
-              }),
+              children: List.generate(6, (index) => buildIcon(index)),
             ),
 
             const Spacer(),
 
-            // Middle motivational text and play button
+            // Motivational text and add button
             Column(
               children: [
                 RichText(
@@ -78,19 +75,19 @@ class _Phase1State extends State<Phase1> {
                   "What are your habits?\nSelect your daily, weekly, or monthly habits.",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      fontSize: 20,
-                      color: Color.fromARGB(255, 15, 14, 14),
-                      fontWeight: FontWeight.bold),
+                    fontSize: 20,
+                    color: Color.fromARGB(255, 15, 14, 14),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 GestureDetector(
-                              onTap: () {
-                              Navigator.push(
-                               context,
-                                 MaterialPageRoute(builder: (context) => const Phase2()),
-                             );
-                           },
-
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const Phase2()),
+                    );
+                  },
                   child: const Icon(
                     Icons.add_circle,
                     size: 56,
@@ -102,16 +99,14 @@ class _Phase1State extends State<Phase1> {
 
             const Spacer(),
 
-            // Bottom 4 icons
+            // Bottom 6 icons
             GridView.count(
               crossAxisCount: 6,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: 12,
               crossAxisSpacing: 16,
-              children: List.generate(6, (index) {
-                return buildIcon(index + 6);
-              }),
+              children: List.generate(6, (index) => buildIcon(index + 6)),
             ),
           ],
         ),
@@ -120,6 +115,8 @@ class _Phase1State extends State<Phase1> {
   }
 
   Widget buildIcon(int index) {
+    if (index >= habitIcons.length) return const SizedBox.shrink();
+
     return GestureDetector(
       onTap: () {
         setState(() {

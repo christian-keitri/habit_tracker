@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:habit_tracker/screens/habit.dart';
 
 class Phase3 extends StatefulWidget {
   const Phase3({super.key});
@@ -10,12 +11,19 @@ class Phase3 extends StatefulWidget {
 
 class Phase3State extends State<Phase3> {
   final TextEditingController _habitNameController = TextEditingController();
-  int _selectedActivityIndex = 0;
-  int _selectedFrequency = 0;
   bool _isBad = false;
+  bool _isDaily = false;
+  bool _isWeekly = false;
+  bool _isMonthly = false;
+  bool _iconPickerExpanded = false;
+  String _selectedIcon = '';
+
+  // New: reminder date & time
+  DateTime _reminderDate = DateTime.now();
+  TimeOfDay _reminderTime = const TimeOfDay(hour: 8, minute: 0);
 
   final List<String> activityIconPaths = [
-    'assets/image/icon1.png',
+     'assets/image/icon1.png',
     'assets/image/icon2.png',
     'assets/image/icon3.png',
     'assets/image/icon4.png',
@@ -27,29 +35,57 @@ class Phase3State extends State<Phase3> {
     'assets/image/icon10.png',
     'assets/image/icon11.png',
     'assets/image/icon12.png',
+    'assets/image/icon13.png',
+    'assets/image/icon14.png',
+    'assets/image/icon15.png',
+    'assets/image/icon16.png',
   ];
 
-  final List<String> _frequencyOptions = ['Daily', 'Weekly', 'Monthly'];
-  final List<bool> _selectedDays = List.generate(7, (_) => false);
-  final List<String> _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  TimeOfDay _reminderTime = const TimeOfDay(hour: 6, minute: 0);
+  Future<void> _pickReminderDate() async {
+    final today = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _reminderDate,
+      firstDate: DateTime(today.year, today.month, today.day),
+      lastDate: today.add(const Duration(days: 365)),
+    );
+    if (!mounted || picked == null) return;
+    setState(() => _reminderDate = picked);
+  }
 
   Future<void> _pickReminderTime() async {
-    final TimeOfDay? picked = await showTimePicker(
+    final picked = await showTimePicker(
       context: context,
       initialTime: _reminderTime,
     );
-    if (picked != null && picked != _reminderTime) {
-      setState(() {
-        _reminderTime = picked;
-      });
-    }
+    if (!mounted || picked == null) return;
+    setState(() => _reminderTime = picked);
   }
 
-  String _formatTimeOfDay(TimeOfDay time) {
-    final now = DateTime.now();
-    final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
-    return DateFormat.jm().format(dt);
+  void _saveHabit() async {
+    final name = _habitNameController.text.trim();
+    if (name.isEmpty || _selectedIcon.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a habit name and select an icon.')),
+      );
+      return;
+    }
+
+    final box = Hive.box<Habit>('habits');
+    final newHabit = Habit(
+      title: name,
+      iconPath: _selectedIcon,
+      isBad: _isBad,
+      isDailyRoutine: _isDaily,
+      isWeeklyRoutine: _isWeekly,
+      isMonthlyRoutine: _isMonthly,
+      isFavorite: false,
+      dailyProgress: {},
+    );
+    await box.add(newHabit);
+    if (!mounted) return;
+    Navigator.pop(context);
   }
 
   @override
@@ -60,220 +96,183 @@ class Phase3State extends State<Phase3> {
 
   @override
   Widget build(BuildContext context) {
+    final dateLabel =
+        "${_reminderDate.year}-${_reminderDate.month.toString().padLeft(2,'0')}-${_reminderDate.day.toString().padLeft(2,'0')}";
+    final timeLabel = _reminderTime.format(context);
+
     return Scaffold(
-      body: Stack(
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: double.infinity,
-            child: Image.asset(
-              'assets/image/background3.png',
-              fit: BoxFit.cover,
-            ),
+      body: Stack(children: [
+        // background
+        SizedBox.expand(
+          child: Image.asset(
+            'assets/image/background3.png',
+            fit: BoxFit.cover,
           ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: IconButton(
-                          icon: const Icon(Icons.arrow_back, color: Colors.white),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ),
-                      const Text(
-                        'Add Habit',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
+        ),
+        SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // back + title
+                Stack(alignment: Alignment.center, children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ),
+                  const Text(
+                    'Add Habit',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ]),
+                const SizedBox(height: 20),
+
+                // name
+                TextField(
+                  controller: _habitNameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Habit Name',
+                    labelStyle: const TextStyle(color: Colors.green),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: const BorderSide(color: Colors.green),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // icon picker
+                ExpansionTile(
+                  title: Row(children: [
+                    const Text(
+                      "Choose Activity Icon",
+                      style: TextStyle(
                           color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: _habitNameController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      labelText: 'Habit Name',
-                      labelStyle: const TextStyle(color: Colors.green),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(color: Colors.green),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Choose Activity',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    alignment: WrapAlignment.center,
-                    children: List.generate(activityIconPaths.length, (index) {
-                      return GestureDetector(
-                        onTap: () => setState(() => _selectedActivityIndex = index),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: _selectedActivityIndex == index
-                                  ? Colors.greenAccent
-                                  : Colors.transparent,
-                              width: 3,
+                    if (_selectedIcon.isNotEmpty) ...[
+                      const SizedBox(width: 10),
+                      Image.asset(_selectedIcon, width: 30, height: 30),
+                    ]
+                  ]),
+                  initiallyExpanded: _iconPickerExpanded,
+                  onExpansionChanged: (e) =>
+                      setState(() => _iconPickerExpanded = e),
+                  children: [
+                    SizedBox(
+                      height: 80,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: activityIconPaths.map((path) {
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedIcon = path;
+                                _iconPickerExpanded = false;
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Image.asset(path, width: 50, height: 50),
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                            color: Colors.white.withAlpha(25),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              activityIconPaths[index],
-                              width: 50,
-                              height: 50,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Repetition Frequency',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 10),
-                  ToggleButtons(
-                    borderRadius: BorderRadius.circular(12),
-                    isSelected: List.generate(
-                      _frequencyOptions.length,
-                      (index) => index == _selectedFrequency,
-                    ),
-                    onPressed: (index) => setState(() => _selectedFrequency = index),
-                    color: Colors.white,
-                    selectedColor: Colors.white,
-                    fillColor: Colors.green,
-                    children: _frequencyOptions.map((e) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Text(e),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 20),
-                  if (_selectedFrequency == 1)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Select Days of the Week',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 30,
-                          children: List.generate(7, (index) {
-                            return ChoiceChip(
-                              label: Text(_days[index]),
-                              selected: _selectedDays[index],
-                              onSelected: (selected) => setState(() {
-                                _selectedDays[index] = selected;
-                              }),
-                            );
-                          }),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  const Text(
-                    'Set Reminder',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: _pickReminderTime,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.green),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.access_time, color: Colors.green),
-                          const SizedBox(width: 8),
-                          Text(
-                            _formatTimeOfDay(_reminderTime),
-                            style: const TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  SwitchListTile(
-                    title: const Text(
-                      "Is this a bad habit?",
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                    ),
-                    value: _isBad,
-                    onChanged: (value) => setState(() => _isBad = value),
-                    activeColor: Colors.redAccent,
-                  ),
-                  const SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_habitNameController.text.trim().isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter a habit name.')),
                           );
-                          return;
-                        }
-
-                        final newHabit = {
-                          'name': _habitNameController.text.trim(),
-                          'icon': activityIconPaths[_selectedActivityIndex],
-                          'frequency': _frequencyOptions[_selectedFrequency],
-                          'days': _selectedDays,
-                          'reminder': _reminderTime,
-                          'isBad': _isBad,
-                        };
-
-                        Navigator.pop(context, newHabit);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 17, 185, 53),
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text(
-                        'Add Habit',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                        }).toList(),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // reminder section
+                const Text(
+                  'Set Reminder',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading:
+                      const Icon(Icons.calendar_today, color: Colors.greenAccent),
+                  title: Text('Date: $dateLabel',
+                      style: const TextStyle(color: Colors.white)),
+                  onTap: _pickReminderDate,
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading:
+                      const Icon(Icons.access_time, color: Colors.greenAccent),
+                  title:
+                      Text('Time: $timeLabel', style: const TextStyle(color: Colors.white)),
+                  onTap: _pickReminderTime,
+                ),
+                const SizedBox(height: 20),
+
+                // routine toggles
+                SwitchListTile(
+                  title: const Text("Is this a bad habit?",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  value: _isBad,
+                  onChanged: (v) => setState(() => _isBad = v),
+                  activeColor: Colors.redAccent,
+                ),
+                SwitchListTile(
+                  title: const Text("Daily Routine",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  value: _isDaily,
+                  onChanged: (v) => setState(() => _isDaily = v),
+                  activeColor: Colors.greenAccent,
+                ),
+                SwitchListTile(
+                  title: const Text("Weekly Routine",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  value: _isWeekly,
+                  onChanged: (v) => setState(() => _isWeekly = v),
+                  activeColor: Colors.greenAccent,
+                ),
+                SwitchListTile(
+                  title: const Text("Monthly Routine",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  value: _isMonthly,
+                  onChanged: (v) => setState(() => _isMonthly = v),
+                  activeColor: Colors.greenAccent,
+                ),
+                const SizedBox(height: 30),
+
+                // save
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _saveHabit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 17, 185, 53),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('Add Habit',
+                        style: TextStyle(fontSize: 18, color: Colors.white)),
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ]),
     );
   }
 }
