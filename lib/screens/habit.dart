@@ -8,30 +8,39 @@ class Habit extends HiveObject {
   String title;
 
   @HiveField(1)
-  bool isBad;
+  String iconPath;
 
   @HiveField(2)
-  String icon;
+  bool isBad;
 
   @HiveField(3)
-  double progress;
+  bool isDailyRoutine;
 
   @HiveField(4)
-  bool isFavorite;
+  bool isWeeklyRoutine;
 
   @HiveField(5)
+  bool isMonthlyRoutine;
+
+  @HiveField(6)
+  bool isFavorite;
+
+  @HiveField(7)
   Map<String, double> dailyProgress;
 
   Habit({
     required this.title,
-    required this.isBad,
-    required this.icon,
-    this.progress = 0.0,
+    required this.iconPath,
+    this.isBad = false,
+    this.isDailyRoutine = false,
+    this.isWeeklyRoutine = false,
+    this.isMonthlyRoutine = false,
     this.isFavorite = false,
     Map<String, double>? dailyProgress,
   }) : dailyProgress = dailyProgress ?? {};
 
-  /// ✅ Method to calculate the current streak based on dailyProgress
+  /// Calculates how many consecutive days up to today this habit
+  /// has been marked complete.
   int getStreak() {
     final now = DateTime.now();
     int streak = 0;
@@ -40,10 +49,10 @@ class Habit extends HiveObject {
       final date = now.subtract(Duration(days: i));
       final key = '${date.year}-${date.month}-${date.day}';
 
-      if (dailyProgress.containsKey(key) && dailyProgress[key]! >= 1.0) {
+      if (dailyProgress[key] == 1.0) {
         streak++;
       } else {
-        break; // Stop counting if a day is missed
+        break;
       }
     }
 

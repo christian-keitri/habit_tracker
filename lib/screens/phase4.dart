@@ -9,7 +9,8 @@ import 'package:habit_tracker/screens/phase3.dart';
 import 'package:habit_tracker/screens/streaks.dart';
 
 class Phase4 extends StatelessWidget {
-  const Phase4({super.key});
+  final List<Habit> habits;
+  const Phase4({super.key, required this.habits});
 
   List<FlSpot> _generateLineChartData(List<Habit> goodHabits) {
     List<FlSpot> spots = [];
@@ -36,8 +37,6 @@ class Phase4 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final habitBox = Hive.box<Habit>('habits');
-    final habits = habitBox.values.toList();
     final goodHabits = habits.where((h) => !h.isBad).toList();
     final badHabits = habits.where((h) => h.isBad).toList();
 
@@ -79,13 +78,43 @@ class Phase4 extends StatelessWidget {
                           height: 200,
                           child: LineChart(
                             LineChartData(
+                              minX: 1,
+                              maxX: 7,
                               backgroundColor: Colors.transparent,
                               gridData: const FlGridData(show: false),
-                              titlesData: const FlTitlesData(
-                                leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
-                                bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true)),
-                                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                              titlesData: FlTitlesData(
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (value, _) {
+                                      if (value % 1 != 0) return const SizedBox.shrink();
+                                      return Text(
+                                        value.toInt().toString(),
+                                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    interval: 1,
+                                    getTitlesWidget: (value, _) {
+                                      int index = value.toInt();
+                                      if (value % 1 != 0 || index < 1 || index > 7) return const SizedBox.shrink();
+                                      final date = DateTime.now().subtract(Duration(days: 7 - index));
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 6),
+                                        child: Text(
+                                          '${date.day}',
+                                          style: const TextStyle(color: Colors.white, fontSize: 10),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                               ),
                               borderData: FlBorderData(show: false),
                               lineBarsData: [
@@ -131,15 +160,9 @@ class Phase4 extends StatelessWidget {
                               columnSpacing: 20,
                               headingRowColor: WidgetStateProperty.all(Colors.transparent),
                               columns: const [
-                                DataColumn(
-                                  label: Text('Habit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                ),
-                                DataColumn(
-                                  label: Text('Completed Today', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                ),
-                                DataColumn(
-                                  label: Text('Streak', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                ),
+                                DataColumn(label: Text('Habit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('Completed Today', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+                                DataColumn(label: Text('Streak', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
                               ],
                               rows: habits.map((habit) {
                                 final todayKey = '${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}';
@@ -195,18 +218,19 @@ class Phase4 extends StatelessWidget {
                 leading: const Icon(Icons.favorite, color: Colors.white),
                 title: const Text('Favorites', style: TextStyle(color: Colors.white)),
                 onTap: () {
-                  final habits = Hive.box<Habit>('habits').values.toList();
-                  final favorites = habits
-                      .where((task) => task.isFavorite)
-                      .map((task) => {
-                            'title': task.title,
-                            'icon': task.icon,
-                            'progress': task.progress,
-                            'isFavorite': task.isFavorite,
-                            'isBad': task.isBad,
-                          })
-                      .toList();
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => FavoritesScreen(favorites: favorites)));
+                  final favorites = habits.where((task) => task.isFavorite).toList();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FavoritesScreen(
+                        favorites: favorites,
+                        onDelete: (habit) {
+                          habit.delete();
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                  );
                 },
               ),
               ListTile(
@@ -243,7 +267,10 @@ class Phase4 extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("All habits have been reset.")),
                       );
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Phase4()));
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const Phase4(habits: [])),
+                      );
                     }
                   }
                 },
