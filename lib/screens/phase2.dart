@@ -119,37 +119,63 @@ class _Phase2State extends State<Phase2> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.remove, color: Colors.white),
-                                        onPressed: () {
-                                          if (currentValue > 0) {
-                                            _updateHabitProgress(habit, currentValue - 1);
-                                          }
-                                        },
-                                      ),
-                                      Text(
-                                        '$currentValue / ${habit.dailyGoal}',
-                                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.add, color: Colors.white),
-                                        onPressed: () {
-                                          if (currentValue < (habit.dailyGoal ?? 1)) {
-                                            _updateHabitProgress(habit, currentValue + 1);
-                                          }
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          habit.isFavorite ? Icons.favorite : Icons.favorite_border,
-                                          color: habit.isFavorite ? Colors.red : Colors.white54,
+                                
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.remove, color: Colors.white),
+                                          onPressed: () {
+                                            if (currentValue > 0) {
+                                              _updateHabitProgress(habit, currentValue - 1);
+                                            }
+                                          },
                                         ),
-                                        onPressed: () => _toggleFavorite(habit),
-                                      ),
-                                    ],
-                                  ),
+                                        Text(
+                                          '$currentValue / ${habit.dailyGoal}',
+                                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.add, color: Colors.white),
+                                          onPressed: () {
+                                            if (currentValue < (habit.dailyGoal ?? 1)) {
+                                              _updateHabitProgress(habit, currentValue + 1);
+                                            }
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            habit.isFavorite ? Icons.favorite : Icons.favorite_border,
+                                            color: habit.isFavorite ? Colors.red : Colors.white54,
+                                          ),
+                                          onPressed: () => _toggleFavorite(habit),
+                                        ),
+                                        const SizedBox(width: 8),
+
+                                        // Progress Ring + Percentage
+                                        Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 24,
+                                              height: 24,
+                                              child: CircularProgressIndicator(
+                                                value: habit.dailyGoal != null && habit.dailyGoal! > 0
+                                                    ? (currentValue / habit.dailyGoal!).clamp(0.0, 1.0)
+                                                    : 0,
+                                                strokeWidth: 3,
+                                                backgroundColor: Colors.white24,
+                                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              '${((currentValue / (habit.dailyGoal ?? 1)) * 100).clamp(0, 100).toInt()}%',
+                                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+
                                   Row(
                                     children: [
                                       if (habit.isDailyRoutine)
