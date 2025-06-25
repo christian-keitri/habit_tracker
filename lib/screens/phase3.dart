@@ -18,6 +18,8 @@ class Phase3State extends State<Phase3> {
   bool _iconPickerExpanded = false;
   String _selectedIcon = '';
 
+  int _dailyGoal = 1;
+
   // New: reminder date & time
   DateTime _reminderDate = DateTime.now();
   TimeOfDay _reminderTime = const TimeOfDay(hour: 8, minute: 0);
@@ -82,6 +84,7 @@ class Phase3State extends State<Phase3> {
       isMonthlyRoutine: _isMonthly,
       isFavorite: false,
       dailyProgress: {},
+      dailyGoal: _dailyGoal,
     );
     await box.add(newHabit);
     if (!mounted) return;
@@ -253,6 +256,42 @@ class Phase3State extends State<Phase3> {
                   activeColor: Colors.greenAccent,
                 ),
                 const SizedBox(height: 30),
+
+
+                const SizedBox(height: 20),
+const Text(
+  'How many times should this habit be done daily?',
+  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+),
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    IconButton(
+      icon: const Icon(Icons.remove, color: Colors.white),
+      onPressed: () {
+        if (_dailyGoal > 1) {
+          setState(() {
+            _dailyGoal--;
+          });
+        }
+      },
+    ),
+    Text(
+      '$_dailyGoal',
+      style: const TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
+    ),
+    IconButton(
+      icon: const Icon(Icons.add, color: Colors.white),
+      onPressed: () {
+        setState(() {
+          _dailyGoal++;
+        });
+      },
+    ),
+  ],
+),
+
+const SizedBox(height: 30),
 
                 // save
                 Center(
