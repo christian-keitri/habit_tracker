@@ -7,6 +7,7 @@ import 'package:habit_tracker/screens/phase1.dart';
 import 'package:habit_tracker/screens/phase2.dart';
 import 'package:habit_tracker/screens/phase3.dart';
 import 'package:habit_tracker/screens/streaks.dart';
+import 'package:habit_tracker/screens/journal_screen.dart';
 
 class Phase4 extends StatelessWidget {
   final List<Habit> habits;
@@ -234,11 +235,6 @@ class Phase4 extends StatelessWidget {
                           ),
                         ),
                       ),
-
-
-
-
-
                       ],
                     ),
                   ),
@@ -251,94 +247,132 @@ class Phase4 extends StatelessWidget {
     );
   }
 
-  Drawer _buildDrawer(BuildContext context) {
-    return Drawer(
-      child: Stack(
-        children: [
-          Positioned.fill(child: Image.asset('assets/image/drawer.png', fit: BoxFit.cover)),
-          ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              const DrawerHeader(
-                decoration: BoxDecoration(color: Colors.transparent),
-                child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
-              ),
-              ListTile(
-                leading: const Icon(Icons.check, color: Colors.white),
-                title: const Text('Your Daily Task', style: TextStyle(color: Colors.white)),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase2())),
-              ),
-              ListTile(
-                leading: const Icon(Icons.add_task, color: Colors.white),
-                title: const Text('Add Task', style: TextStyle(color: Colors.white)),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase3())),
-              ),
-              ListTile(
-                leading: const Icon(Icons.favorite, color: Colors.white),
-                title: const Text('Favorites', style: TextStyle(color: Colors.white)),
-                onTap: () {
-                  final favorites = habits.where((task) => task.isFavorite).toList();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => FavoritesScreen(
-                        favorites: favorites,
-                        onDelete: (habit) {
-                          habit.delete();
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                  );
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.local_fire_department, color: Colors.white),
-                title: const Text('Streaks', style: TextStyle(color: Colors.white)),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StreaksScreen())),
-              ),
-              ListTile(
-                leading: const Icon(Icons.refresh, color: Colors.white),
-                title: const Text('Reset All Data', style: TextStyle(color: Colors.white)),
-                onTap: () async {
-                  final confirmed = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text("Reset All Data"),
-                      content: const Text("Are you sure you want to delete all habits and start over?"),
-                      actions: [
-                        TextButton(child: const Text("Cancel"), onPressed: () => Navigator.of(context).pop(false)),
-                        TextButton(child: const Text("Confirm", style: TextStyle(color: Colors.red)), onPressed: () => Navigator.of(context).pop(true)),
-                      ],
-                    ),
-                  );
 
-                  if (confirmed == true) {
-                    final habitBox = Hive.box<Habit>('habits');
-                    await habitBox.clear();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("All habits have been reset.")),
-                      );
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const Phase4(habits: [])),
-                      );
-                    }
+Drawer _buildDrawer(BuildContext context) {
+  return Drawer(
+    child: Stack(
+      children: [
+        Positioned.fill(child: Image.asset('assets/image/drawer.png', fit: BoxFit.cover)),
+        ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.transparent),
+              child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.check, color: Colors.white),
+              title: const Text('Your Daily Task', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase2())),
+            ),
+            ListTile(
+              leading: const Icon(Icons.add_task, color: Colors.white),
+              title: const Text('Add Task', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase3())),
+            ),
+            ListTile(
+              leading: const Icon(Icons.favorite, color: Colors.white),
+              title: const Text('Favorites', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                final favorites = habits.where((task) => task.isFavorite).toList();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => FavoritesScreen(
+                      favorites: favorites,
+                      onDelete: (habit) {
+                        habit.delete();
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.local_fire_department, color: Colors.white),
+              title: const Text('Streaks', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StreaksScreen())),
+            ),
+            ListTile(
+              leading: const Icon(Icons.book, color: Colors.white),
+              title: const Text('Journal', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                if (habits.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("No habits available for journal.")),
+                  );
+                } else {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.white,
+                    builder: (context) => ListView(
+                      children: habits.map((habit) {
+                        return ListTile(
+                          leading: habit.iconPath.isNotEmpty
+                              ? Image.asset(habit.iconPath, width: 24, height: 24)
+                              : const Icon(Icons.bookmark),
+                          title: Text(habit.title),
+                          onTap: () {
+                            Navigator.pop(context); // close bottom sheet
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => JournalScreen(habit: habit),
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  );
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.refresh, color: Colors.white),
+              title: const Text('Reset All Data', style: TextStyle(color: Colors.white)),
+              onTap: () async {
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Reset All Data"),
+                    content: const Text("Are you sure you want to delete all habits and start over?"),
+                    actions: [
+                      TextButton(child: const Text("Cancel"), onPressed: () => Navigator.of(context).pop(false)),
+                      TextButton(child: const Text("Confirm", style: TextStyle(color: Colors.red)), onPressed: () => Navigator.of(context).pop(true)),
+                    ],
+                  ),
+                );
+
+                if (confirmed == true) {
+                  final habitBox = Hive.box<Habit>('habits');
+                  await habitBox.clear();
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("All habits have been reset.")),
+                    );
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const Phase4(habits: [])),
+                    );
                   }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.exit_to_app, color: Colors.white),
-                title: const Text('Exit', style: TextStyle(color: Colors.white)),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase1())),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+                }
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.exit_to_app, color: Colors.white),
+              title: const Text('Exit', style: TextStyle(color: Colors.white)),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase1())),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+
 
   Color _getColorForHabit(String habit) {
     switch (habit.toLowerCase()) {

@@ -1,0 +1,135 @@
+import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:habit_tracker/screens/journal.dart';
+import 'package:habit_tracker/screens/habit.dart';
+
+class JournalScreen extends StatefulWidget {
+  final Habit habit;
+
+  const JournalScreen({super.key, required this.habit});
+
+  @override
+  State<JournalScreen> createState() => _JournalScreenState();
+}
+
+class _JournalScreenState extends State<JournalScreen> {
+  final TextEditingController _controller = TextEditingController();
+  late Box<JournalEntry> journalBox;
+  List<JournalEntry> entries = [];
+
+  @override
+  void initState() {
+    super.initState();
+    journalBox = Hive.box<JournalEntry>('journals');
+    _loadEntries();
+  }
+
+  void _loadEntries() {
+    final allEntries = journalBox.values
+        .where((entry) => entry.habitId == widget.habit.key.toString())
+        .toList();
+    setState(() {
+      entries = allEntries.reversed.toList();
+    });
+  }
+
+  void _addEntry(String content) {
+    final newEntry = JournalEntry(
+      habitId: widget.habit.key.toString(),
+      content: content,
+      date: DateTime.now(),
+    );
+    journalBox.add(newEntry);
+    _controller.clear();
+    _loadEntries();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/image/journalbg.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: Text(
+            'Journal: ${widget.habit.title}',
+            style: const TextStyle(color: Colors.white),
+          ),
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _controller,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Write something...',
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white54),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.send, color: Colors.white),
+                    onPressed: () {
+                      if (_controller.text.trim().isNotEmpty) {
+                        _addEntry(_controller.text.trim());
+                      }
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Previous Entries',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: entries.isEmpty
+                    ? const Center(
+                        child: Text(
+                          'No journal entries yet.',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: entries.length,
+                        itemBuilder: (context, index) {
+                          final entry = entries[index];
+                          return Card(
+                            color: Colors.white24,
+                            child: ListTile(
+                              title: Text(
+                                entry.content,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              subtitle: Text(
+                                entry.date.toLocal().toString().split('.').first,
+                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -6,6 +6,7 @@ import 'package:habit_tracker/screens/phase3.dart';
 import 'package:habit_tracker/screens/favorites.dart';
 import 'package:habit_tracker/screens/phase4.dart';
 import 'package:habit_tracker/screens/streaks.dart';
+import 'package:habit_tracker/screens/journal_screen.dart'; // 👈 make sure this file exists
 
 class Phase2 extends StatefulWidget {
   const Phase2({super.key});
@@ -115,87 +116,99 @@ class _Phase2State extends State<Phase2> {
                               leading: habit.iconPath.isNotEmpty
                                   ? Image.asset(habit.iconPath, width: 32, height: 32)
                                   : null,
-                              title: Text(habit.title, style: const TextStyle(color: Colors.white)),
+                              title: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      habit.title,
+                                      style: const TextStyle(color: Colors.white),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.book, color: Colors.white70, size: 20),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => JournalScreen(habit: habit),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.remove, color: Colors.white),
-                                          onPressed: () {
-                                            if (currentValue > 0) {
-                                              _updateHabitProgress(habit, currentValue - 1);
-                                            }
-                                          },
+                                  Row(
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(Icons.remove, color: Colors.white),
+                                        onPressed: () {
+                                          if (currentValue > 0) {
+                                            _updateHabitProgress(habit, currentValue - 1);
+                                          }
+                                        },
+                                      ),
+                                      Text(
+                                        '$currentValue / ${habit.dailyGoal}',
+                                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.add, color: Colors.white),
+                                        onPressed: () {
+                                          if (currentValue < (habit.dailyGoal ?? 1)) {
+                                            _updateHabitProgress(habit, currentValue + 1);
+                                          }
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          habit.isFavorite ? Icons.favorite : Icons.favorite_border,
+                                          color: habit.isFavorite ? Colors.red : Colors.white54,
                                         ),
-                                        Text(
-                                          '$currentValue / ${habit.dailyGoal}',
-                                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                                        onPressed: () => _toggleFavorite(habit),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          value: habit.dailyGoal != null && habit.dailyGoal! > 0
+                                              ? (currentValue / habit.dailyGoal!).clamp(0.0, 1.0)
+                                              : 0,
+                                          strokeWidth: 3,
+                                          backgroundColor: Colors.white24,
+                                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
                                         ),
-                                        IconButton(
-                                          icon: const Icon(Icons.add, color: Colors.white),
-                                          onPressed: () {
-                                            if (currentValue < (habit.dailyGoal ?? 1)) {
-                                              _updateHabitProgress(habit, currentValue + 1);
-                                            }
-                                          },
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            habit.isFavorite ? Icons.favorite : Icons.favorite_border,
-                                            color: habit.isFavorite ? Colors.red : Colors.white54,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '${((currentValue / (habit.dailyGoal ?? 1)) * 100).clamp(0, 100).toInt()}%',
+                                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.local_fire_department, color: Colors.orangeAccent, size: 20),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${habit.getStreak()}',
+                                            style: const TextStyle(
+                                              color: Colors.orangeAccent,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              shadows: [
+                                                Shadow(blurRadius: 2, color: Colors.black45, offset: Offset(1, 1)),
+                                              ],
+                                            ),
                                           ),
-                                          onPressed: () => _toggleFavorite(habit),
-                                        ),
-                                        const SizedBox(width: 8),
-
-                                        // Progress Ring + Percentage + Streak
-                                                Row(
-                                                  children: [
-                                                    SizedBox(
-                                                      width: 24,
-                                                      height: 24,
-                                                      child: CircularProgressIndicator(
-                                                        value: habit.dailyGoal != null && habit.dailyGoal! > 0
-                                                            ? (currentValue / habit.dailyGoal!).clamp(0.0, 1.0)
-                                                            : 0,
-                                                        strokeWidth: 3,
-                                                        backgroundColor: Colors.white24,
-                                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 6),
-                                                    Text(
-                                                      '${((currentValue / (habit.dailyGoal ?? 1)) * 100).clamp(0, 100).toInt()}%',
-                                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                                    ),
-                                                    const SizedBox(width: 12),
-                                                    Row(
-                                                      children: [
-                                                        const Icon(Icons.local_fire_department, color: Colors.orangeAccent, size: 20),
-                                                        const SizedBox(width: 4),
-                                                        Text(
-                                                          '${habit.getStreak()}',
-                                                          style: const TextStyle(
-                                                            color: Colors.orangeAccent,
-                                                            fontWeight: FontWeight.bold,
-                                                            fontSize: 14,
-                                                            shadows: [
-                                                              Shadow(blurRadius: 2, color: Colors.black45, offset: Offset(1, 1)),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
-                                                ),
-
-                                       
-                                      ],
-                                    ),
-
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                   Row(
                                     children: [
                                       if (habit.isDailyRoutine)
@@ -215,8 +228,6 @@ class _Phase2State extends State<Phase2> {
                                         ),
                                     ],
                                   ),
-
-
                                 ],
                               ),
                             ),
@@ -281,6 +292,48 @@ class _Phase2State extends State<Phase2> {
                   }
                 },
               ),
+
+   ListTile(
+  leading: const Icon(Icons.book, color: Colors.white),
+  title: const Text('Journal', style: TextStyle(color: Colors.white)),
+  onTap: () {
+    if (habits.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("No habits available for journal.")),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.white,
+        builder: (context) => ListView(
+          children: habits.map((habit) {
+            return ListTile(
+              leading: habit.iconPath.isNotEmpty
+                  ? Image.asset(habit.iconPath, width: 24, height: 24)
+                  : const Icon(Icons.bookmark),
+              title: Text(habit.title),
+              onTap: () {
+                Navigator.pop(context); // close sheet
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => JournalScreen(habit: habit),
+                  ),
+                );
+              },
+            );
+          }).toList(),
+        ),
+      );
+    }
+  },
+),
+
+
+
+
+
+
               ListTile(
                 leading: const Icon(Icons.local_fire_department, color: Colors.orange),
                 title: const Text('Streaks', style: TextStyle(color: Colors.white)),
