@@ -6,7 +6,6 @@ import 'package:habit_tracker/screens/habit.dart';
 class StreaksScreen extends StatelessWidget {
   const StreaksScreen({super.key});
 
-  // List of motivational quotes
   final List<String> quotes = const [
     "“Small steps every day lead to big changes.”",
     "“Discipline is choosing between what you want now and what you want most.”",
@@ -26,81 +25,152 @@ class StreaksScreen extends StatelessWidget {
     return total;
   }
 
+  Habit? getTopHabit(List<Habit> habits) {
+    if (habits.isEmpty) return null;
+    habits.sort((a, b) => b.getStreak().compareTo(a.getStreak()));
+    return habits.first;
+  }
+
   @override
   Widget build(BuildContext context) {
     final habitBox = Hive.box<Habit>('habits');
     final habits = habitBox.values.toList();
-    final totalStreak = calculateTotalStreak(habits);
-
+    final topHabit = getTopHabit(habits);
     final random = Random();
     final quote = quotes[random.nextInt(quotes.length)];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Streaks'),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/image/qoutes.png'),
+          fit: BoxFit.cover,
+        ),
       ),
-      extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/image/qoutes.png',
-              fit: BoxFit.cover,
-            ),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.local_fire_department, size: 100, color: Colors.orange),
-                  const SizedBox(height: 20),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Streaks'),
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        extendBodyBehindAppBar: true,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(height: 8),
+                const Text(
+                  'Keep it up and stay consistent 🔥',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+
+                if (topHabit != null) ...[
+                  const SizedBox(height: 24),
                   Text(
-                    'You’re on a $totalStreak-day streak!',
+                    '🏆 Longest Streak: "${topHabit.title}"',
                     style: const TextStyle(
-                      color: Color.fromARGB(224, 17, 17, 16),
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Keep it up and stay consistent 🔥',
-                    style: TextStyle(
-                      color: Color.fromARGB(179, 14, 13, 13),
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  const Divider(color: Colors.white38),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Daily Quotes',
-                    style: TextStyle(
-                      color: Color.fromARGB(255, 14, 14, 13),
                       fontSize: 18,
-                      fontWeight: FontWeight.w900,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 4),
                   Text(
-                    quote,
-                    textAlign: TextAlign.center,
+                    '${topHabit.getStreak()} days',
                     style: const TextStyle(
-                      color: Color.fromARGB(255, 8, 8, 8),
-                      fontSize: 28,
-                      fontStyle: FontStyle.italic,
+                      fontSize: 16,
+                      color: Colors.white,
                     ),
                   ),
                 ],
-              ),
+
+                const SizedBox(height: 30),
+                const Divider(color: Colors.white70),
+
+                const SizedBox(height: 10),
+                const Text(
+                  'Top Habits',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                ...habits
+                    .where((h) => h.getStreak() > 0)
+                    .take(3)
+                    .map(
+                      (habit) => Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              habit.title,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            LinearProgressIndicator(
+                              value: (habit.getStreak() / 30).clamp(0.0, 1.0),
+                              backgroundColor: Colors.white30,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                habit.getStreak() >= 7
+                                    ? Colors.orange
+                                    : Colors.greenAccent,
+                              ),
+                              minHeight: 8,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${habit.getStreak()} day streak',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.white70,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                const SizedBox(height: 30),
+                const Divider(color: Colors.white70),
+
+                const SizedBox(height: 16),
+                const Text(
+                  '📖 Daily Motivation',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  quote,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

@@ -151,28 +151,48 @@ class _Phase2State extends State<Phase2> {
                                         ),
                                         const SizedBox(width: 8),
 
-                                        // Progress Ring + Percentage
-                                        Row(
-                                          children: [
-                                            SizedBox(
-                                              width: 24,
-                                              height: 24,
-                                              child: CircularProgressIndicator(
-                                                value: habit.dailyGoal != null && habit.dailyGoal! > 0
-                                                    ? (currentValue / habit.dailyGoal!).clamp(0.0, 1.0)
-                                                    : 0,
-                                                strokeWidth: 3,
-                                                backgroundColor: Colors.white24,
-                                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 6),
-                                            Text(
-                                              '${((currentValue / (habit.dailyGoal ?? 1)) * 100).clamp(0, 100).toInt()}%',
-                                              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
-                                            ),
-                                          ],
-                                        ),
+                                        // Progress Ring + Percentage + Streak
+                                                Row(
+                                                  children: [
+                                                    SizedBox(
+                                                      width: 24,
+                                                      height: 24,
+                                                      child: CircularProgressIndicator(
+                                                        value: habit.dailyGoal != null && habit.dailyGoal! > 0
+                                                            ? (currentValue / habit.dailyGoal!).clamp(0.0, 1.0)
+                                                            : 0,
+                                                        strokeWidth: 3,
+                                                        backgroundColor: Colors.white24,
+                                                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.greenAccent),
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Text(
+                                                      '${((currentValue / (habit.dailyGoal ?? 1)) * 100).clamp(0, 100).toInt()}%',
+                                                      style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                                                    ),
+                                                    const SizedBox(width: 12),
+                                                    Row(
+                                                      children: [
+                                                        const Icon(Icons.local_fire_department, color: Colors.orangeAccent, size: 20),
+                                                        const SizedBox(width: 4),
+                                                        Text(
+                                                          '${habit.getStreak()}',
+                                                          style: const TextStyle(
+                                                            color: Colors.orangeAccent,
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 14,
+                                                            shadows: [
+                                                              Shadow(blurRadius: 2, color: Colors.black45, offset: Offset(1, 1)),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+
+                                       
                                       ],
                                     ),
 
@@ -195,6 +215,8 @@ class _Phase2State extends State<Phase2> {
                                         ),
                                     ],
                                   ),
+
+
                                 ],
                               ),
                             ),
@@ -221,7 +243,7 @@ class _Phase2State extends State<Phase2> {
     return Drawer(
       child: Stack(
         children: [
-          Positioned.fill(child: Image.asset('assets/image/drawer.avif', fit: BoxFit.cover)),
+          Positioned.fill(child: Image.asset('assets/image/drawer.png', fit: BoxFit.cover)),
           ListView(
             padding: EdgeInsets.zero,
             children: [

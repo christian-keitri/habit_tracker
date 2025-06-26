@@ -59,7 +59,7 @@ class FavoritesScreen extends StatelessWidget {
                         ...monthlyRoutines.map((habit) => _buildHabitCard(context, habit)),
                       ],
                       if (favoriteOnly.isNotEmpty) ...[
-                        const _SectionTitle(title: 'Favorites', color: Colors.amber),
+                        const _SectionTitle(title: 'Favorites', color: Color.fromARGB(255, 209, 38, 26)),
                         ...favoriteOnly.map((habit) => _buildHabitCard(context, habit)),
                       ],
                     ],
