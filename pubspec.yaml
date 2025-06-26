@@ -25,6 +25,7 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   hive_generator: ^2.0.1
   build_runner: ^2.4.5
+  analyzer: ^6.4.1
 
 flutter:
   uses-material-design: true
