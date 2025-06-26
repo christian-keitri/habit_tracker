@@ -14,24 +14,19 @@ class Phase4 extends StatelessWidget {
 
   List<FlSpot> _generateLineChartData(List<Habit> goodHabits) {
     List<FlSpot> spots = [];
-
     for (int i = 0; i < 7; i++) {
       final date = DateTime.now().subtract(Duration(days: 6 - i));
       final key = '${date.year}-${date.month}-${date.day}';
-
       double total = 0;
       int count = 0;
-
       for (var habit in goodHabits) {
         if (habit.dailyProgress.containsKey(key)) {
           total += habit.dailyProgress[key]!;
           count++;
         }
       }
-
       spots.add(FlSpot((i + 1).toDouble(), count == 0 ? 0 : total / count));
     }
-
     return spots;
   }
 
@@ -51,23 +46,28 @@ class Phase4 extends StatelessWidget {
 
     return Scaffold(
       drawer: _buildDrawer(context),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Stats.', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+      ),
+      extendBodyBehindAppBar: true,
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset('assets/image/background4.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/image/background4.png',
+              fit: BoxFit.cover,
+            ),
           ),
           SafeArea(
             child: Column(
               children: [
-                AppBar(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  iconTheme: const IconThemeData(color: Colors.white),
-                  title: const Text('Stats.', style: TextStyle(color: Colors.white)),
-                  centerTitle: true,
-                ),
+                const SizedBox(height: kToolbarHeight),
                 Expanded(
-                  child: Padding(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -88,31 +88,37 @@ class Phase4 extends StatelessWidget {
                                     showTitles: true,
                                     getTitlesWidget: (value, _) {
                                       if (value % 1 != 0) return const SizedBox.shrink();
-                                      return Text(
-                                        value.toInt().toString(),
-                                        style: const TextStyle(color: Colors.white, fontSize: 10),
-                                      );
+                                      return Text('${value.toInt()}',
+                                          style: const TextStyle(color: Colors.white, fontSize: 10));
                                     },
                                   ),
                                 ),
+
                                 bottomTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    interval: 1,
-                                    getTitlesWidget: (value, _) {
-                                      int index = value.toInt();
-                                      if (value % 1 != 0 || index < 1 || index > 7) return const SizedBox.shrink();
-                                      final date = DateTime.now().subtract(Duration(days: 7 - index));
-                                      return Padding(
-                                        padding: const EdgeInsets.only(top: 6),
-                                        child: Text(
-                                          '${date.day}',
-                                          style: const TextStyle(color: Colors.white, fontSize: 10),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
+  sideTitles: SideTitles(
+    showTitles: true,
+    getTitlesWidget: (value, _) {
+      int index = value.toInt();
+      if (index >= habits.length || habits[index].iconPath.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Image.asset(
+          habits[index].iconPath,
+          width: 24,
+          height: 24,
+        ),
+      );
+    },
+  ),
+),
+
+
+
+                              
+
+
                                 topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                                 rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                               ),
@@ -151,33 +157,88 @@ class Phase4 extends StatelessWidget {
                                 ),
                               ),
                         const SizedBox(height: 30),
-                        const Text("Habit Completion Table", style: TextStyle(color: Colors.white)),
+                        const Text("Habit Completion (Bar Chart)", style: TextStyle(color: Colors.white)),
                         const SizedBox(height: 12),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: DataTable(
-                              columnSpacing: 20,
-                              headingRowColor: WidgetStateProperty.all(Colors.transparent),
-                              columns: const [
-                                DataColumn(label: Text('Habit', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                                DataColumn(label: Text('Completed Today', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                                DataColumn(label: Text('Streak', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-                              ],
-                              rows: habits.map((habit) {
-                                final todayKey = '${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}';
-                                final completedToday = (habit.dailyProgress[todayKey] ?? 0.0) >= 1.0;
-                                final streak = _calculateStreak(habit);
+                      SizedBox(
+                        height: 250,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SizedBox(
+                            width: habits.length * 60, // Adjust 60 based on spacing
+                            child: BarChart(
+                              BarChartData(
+                                alignment: BarChartAlignment.spaceAround,
+                                gridData: const FlGridData(show: false),
+                                borderData: FlBorderData(show: false),
+                                titlesData: FlTitlesData(
+                                  leftTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 28,
+                                      getTitlesWidget: (value, _) => Text(
+                                        '${value.toInt()}',
+                                        style: const TextStyle(color: Colors.white, fontSize: 10),
+                                      ),
+                                    ),
+                                  ),
 
-                                return DataRow(cells: [
-                                  DataCell(Text(habit.title, style: const TextStyle(color: Colors.white))),
-                                  DataCell(Text(completedToday ? 'Yes ✅' : 'No ❌', style: const TextStyle(color: Colors.white))),
-                                  DataCell(Text('$streak days', style: const TextStyle(color: Colors.white))),
-                                ]);
-                              }).toList(),
+                                  bottomTitles: AxisTitles(
+  sideTitles: SideTitles(
+    showTitles: true,
+    getTitlesWidget: (value, _) {
+      int index = value.toInt();
+      if (index >= habits.length || habits[index].iconPath.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Image.asset(
+          habits[index].iconPath,
+          width: 24,
+          height: 24,
+        ),
+      );
+    },
+  ),
+),
+
+                                 
+                                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                ),
+                                barGroups: List.generate(habits.length, (index) {
+                                  final habit = habits[index];
+                                  final streak = _calculateStreak(habit).toDouble();
+                                  final completed = (habit.dailyProgress['${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}'] ?? 0) >= 1 ? 1.0 : 0.0;
+
+                                  return BarChartGroupData(
+                                    x: index,
+                                    barRods: [
+                                      BarChartRodData(
+                                        toY: streak,
+                                        width: 12,
+                                        color: Colors.greenAccent,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      BarChartRodData(
+                                        toY: completed * 5,
+                                        width: 4,
+                                        color: Colors.orangeAccent,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                              ),
                             ),
                           ),
                         ),
+                      ),
+
+
+
+
+
                       ],
                     ),
                   ),
@@ -190,13 +251,11 @@ class Phase4 extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawer(BuildContext context) {
+  Drawer _buildDrawer(BuildContext context) {
     return Drawer(
       child: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset('assets/image/drawer.avif', fit: BoxFit.cover),
-          ),
+          Positioned.fill(child: Image.asset('assets/image/drawer.png', fit: BoxFit.cover)),
           ListView(
             padding: EdgeInsets.zero,
             children: [
@@ -248,14 +307,8 @@ class Phase4 extends StatelessWidget {
                       title: const Text("Reset All Data"),
                       content: const Text("Are you sure you want to delete all habits and start over?"),
                       actions: [
-                        TextButton(
-                          child: const Text("Cancel"),
-                          onPressed: () => Navigator.of(context).pop(false),
-                        ),
-                        TextButton(
-                          child: const Text("Confirm", style: TextStyle(color: Colors.red)),
-                          onPressed: () => Navigator.of(context).pop(true),
-                        ),
+                        TextButton(child: const Text("Cancel"), onPressed: () => Navigator.of(context).pop(false)),
+                        TextButton(child: const Text("Confirm", style: TextStyle(color: Colors.red)), onPressed: () => Navigator.of(context).pop(true)),
                       ],
                     ),
                   );
@@ -278,7 +331,7 @@ class Phase4 extends StatelessWidget {
               ListTile(
                 leading: const Icon(Icons.exit_to_app, color: Colors.white),
                 title: const Text('Exit', style: TextStyle(color: Colors.white)),
-                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => Phase1())),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase1())),
               ),
             ],
           ),
@@ -296,14 +349,13 @@ class Phase4 extends StatelessWidget {
       case 'drinking alcohol':
         return Colors.purple;
       default:
-        return Colors.blueAccent;
+        return const Color.fromARGB(255, 54, 226, 175);
     }
   }
 
   int _calculateStreak(Habit habit) {
     int streak = 0;
     DateTime today = DateTime.now();
-
     for (int i = 0; i < 365; i++) {
       final date = today.subtract(Duration(days: i));
       final key = '${date.year}-${date.month}-${date.day}';
