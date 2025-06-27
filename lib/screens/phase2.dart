@@ -6,7 +6,8 @@ import 'package:habit_tracker/screens/phase3.dart';
 import 'package:habit_tracker/screens/favorites.dart';
 import 'package:habit_tracker/screens/phase4.dart';
 import 'package:habit_tracker/screens/streaks.dart';
-import 'package:habit_tracker/screens/journal_screen.dart'; // 👈 make sure this file exists
+import 'package:habit_tracker/screens/journal_screen.dart';
+import 'package:habit_tracker/screens/journal.dart'; // Ensure this is your JournalEntry model
 
 class Phase2 extends StatefulWidget {
   const Phase2({super.key});
@@ -18,11 +19,33 @@ class _Phase2State extends State<Phase2> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  final Set<DateTime> _journalDates = {};
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
+    _loadJournalDates();
+  }
+
+  void _loadJournalDates() {
+    final journalBox = Hive.box<JournalEntry>('journals');
+    final entries = journalBox.values;
+
+    final dates = <DateTime>{};
+    for (var entry in entries) {
+      final date = DateTime(entry.date.year, entry.date.month, entry.date.day);
+      dates.add(date);
+    }
+
+    setState(() {
+      _journalDates.clear();
+      _journalDates.addAll(dates);
+    });
+  }
+
+  List<DateTime> _getEventsForDay(DateTime day) {
+    return _journalDates.where((d) => isSameDay(d, day)).toList();
   }
 
   void _updateHabitProgress(Habit habit, int newValue) {
@@ -75,6 +98,7 @@ class _Phase2State extends State<Phase2> {
                     _focusedDay = foc;
                   });
                 },
+                eventLoader: _getEventsForDay,
                 onFormatChanged: (fmt) => setState(() => _calendarFormat = fmt),
                 headerStyle: const HeaderStyle(
                   titleTextStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
@@ -86,6 +110,7 @@ class _Phase2State extends State<Phase2> {
                   formatButtonTextStyle: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                 ),
                 calendarStyle: const CalendarStyle(
+                  markerDecoration: BoxDecoration(color: Colors.yellowAccent, shape: BoxShape.circle),
                   todayDecoration: BoxDecoration(color: Color.fromARGB(255, 148, 223, 129), shape: BoxShape.circle),
                   selectedDecoration: BoxDecoration(color: Color.fromARGB(255, 42, 153, 17), shape: BoxShape.circle),
                   defaultTextStyle: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
@@ -134,7 +159,7 @@ class _Phase2State extends State<Phase2> {
                                         MaterialPageRoute(
                                           builder: (_) => JournalScreen(habit: habit),
                                         ),
-                                      );
+                                      ).then((_) => _loadJournalDates());
                                     },
                                   ),
                                 ],
@@ -243,7 +268,7 @@ class _Phase2State extends State<Phase2> {
           child: const Icon(Icons.add),
           onPressed: () async {
             await Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase3()));
-            setState(() {}); // refresh after returning
+            setState(() {});
           },
         ),
       ),
@@ -292,48 +317,41 @@ class _Phase2State extends State<Phase2> {
                   }
                 },
               ),
-
-   ListTile(
-  leading: const Icon(Icons.book, color: Colors.white),
-  title: const Text('Journal', style: TextStyle(color: Colors.white)),
-  onTap: () {
-    if (habits.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("No habits available for journal.")),
-      );
-    } else {
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.white,
-        builder: (context) => ListView(
-          children: habits.map((habit) {
-            return ListTile(
-              leading: habit.iconPath.isNotEmpty
-                  ? Image.asset(habit.iconPath, width: 24, height: 24)
-                  : const Icon(Icons.bookmark),
-              title: Text(habit.title),
-              onTap: () {
-                Navigator.pop(context); // close sheet
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => JournalScreen(habit: habit),
-                  ),
-                );
-              },
-            );
-          }).toList(),
-        ),
-      );
-    }
-  },
-),
-
-
-
-
-
-
+              ListTile(
+                leading: const Icon(Icons.book, color: Colors.white),
+                title: const Text('Journal', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  if (habits.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("No habits available for journal.")),
+                    );
+                  } else {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: Colors.white,
+                      builder: (context) => ListView(
+                        children: habits.map((habit) {
+                          return ListTile(
+                            leading: habit.iconPath.isNotEmpty
+                                ? Image.asset(habit.iconPath, width: 24, height: 24)
+                                : const Icon(Icons.bookmark),
+                            title: Text(habit.title),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => JournalScreen(habit: habit),
+                                ),
+                              ).then((_) => _loadJournalDates());
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  }
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.local_fire_department, color: Colors.orange),
                 title: const Text('Streaks', style: TextStyle(color: Colors.white)),

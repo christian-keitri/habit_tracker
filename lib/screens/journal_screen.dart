@@ -44,6 +44,48 @@ class _JournalScreenState extends State<JournalScreen> {
     _loadEntries();
   }
 
+  void _confirmDelete(JournalEntry entry) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Delete Entry"),
+        content: const Text("Are you sure you want to delete this journal entry?"),
+        actions: [
+          TextButton(
+            child: const Text("Cancel"),
+            onPressed: () => Navigator.pop(dialogContext, false),
+          ),
+          TextButton(
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
+            onPressed: () => Navigator.pop(dialogContext, true),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true && mounted) {
+      final deletedEntry = entry;
+      final deletedKey = entry.key;
+      await entry.delete();
+      _loadEntries();
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Journal entry deleted'),
+          action: SnackBarAction(
+            label: 'UNDO',
+            onPressed: () {
+              journalBox.put(deletedKey, deletedEntry);
+              _loadEntries();
+            },
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -118,8 +160,19 @@ class _JournalScreenState extends State<JournalScreen> {
                                 style: const TextStyle(color: Colors.white),
                               ),
                               subtitle: Text(
-                                entry.date.toLocal().toString().split('.').first,
-                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                entry.date
+                                    .toLocal()
+                                    .toString()
+                                    .split('.')
+                                    .first,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                onPressed: () => _confirmDelete(entry),
                               ),
                             ),
                           );
