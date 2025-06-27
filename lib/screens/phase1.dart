@@ -61,7 +61,7 @@ class _Phase1State extends State<Phase1> {
                       ),
                       TextSpan(
                         text: 'HABIT\n',
-                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black),
                       ),
                       TextSpan(
                         text: 'TRACK IT',

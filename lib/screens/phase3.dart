@@ -41,6 +41,10 @@ class Phase3State extends State<Phase3> {
     'assets/image/icon14.png',
     'assets/image/icon15.png',
     'assets/image/icon16.png',
+    'assets/image/icon17.png',
+    'assets/image/icon18.png',
+    'assets/image/icon19.png',
+    'assets/image/icon20.png',
   ];
 
   Future<void> _pickReminderDate() async {
@@ -144,12 +148,12 @@ class Phase3State extends State<Phase3> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Habit Name',
-                    labelStyle: const TextStyle(color: Colors.green),
+                    labelStyle: const TextStyle(color: Color.fromARGB(255, 241, 241, 241)),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(color: Colors.green),
+                      borderSide: const BorderSide(color: Color.fromARGB(255, 253, 255, 253)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),

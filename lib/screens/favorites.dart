@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:habit_tracker/screens/habit.dart';
 
-class FavoritesScreen extends StatelessWidget {
+class FavoritesScreen extends StatefulWidget {
   final List<Habit> favorites;
   final void Function(Habit)? onDelete;
 
@@ -12,11 +12,24 @@ class FavoritesScreen extends StatelessWidget {
   });
 
   @override
+  State<FavoritesScreen> createState() => _FavoritesScreenState();
+}
+
+class _FavoritesScreenState extends State<FavoritesScreen> {
+  late List<Habit> _favorites;
+
+  @override
+  void initState() {
+    super.initState();
+    _favorites = List.from(widget.favorites); // Make a local mutable copy
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final dailyRoutines = favorites.where((h) => h.isDailyRoutine).toList();
-    final weeklyRoutines = favorites.where((h) => h.isWeeklyRoutine).toList();
-    final monthlyRoutines = favorites.where((h) => h.isMonthlyRoutine).toList();
-    final favoriteOnly = favorites.where((h) =>
+    final dailyRoutines = _favorites.where((h) => h.isDailyRoutine).toList();
+    final weeklyRoutines = _favorites.where((h) => h.isWeeklyRoutine).toList();
+    final monthlyRoutines = _favorites.where((h) => h.isMonthlyRoutine).toList();
+    final favoriteOnly = _favorites.where((h) =>
         !h.isDailyRoutine && !h.isWeeklyRoutine && !h.isMonthlyRoutine).toList();
 
     return Scaffold(
@@ -36,7 +49,7 @@ class FavoritesScreen extends StatelessWidget {
             ),
           ),
           SafeArea(
-            child: favorites.isEmpty
+            child: _favorites.isEmpty
                 ? const Center(
                     child: Text(
                       'No favorite habits yet.',
@@ -131,8 +144,11 @@ class FavoritesScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              habit.delete();
-              if (onDelete != null) onDelete!(habit);
+              habit.delete(); // Delete from Hive
+              setState(() {
+                _favorites.remove(habit); // Refresh local list
+              });
+              if (widget.onDelete != null) widget.onDelete!(habit);
             },
             child: const Text('Delete'),
           ),
@@ -159,8 +175,9 @@ class FavoritesScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               habit.title = controller.text;
-              habit.save();
+              habit.save(); // Save updated title
               Navigator.pop(context);
+              setState(() {}); // Refresh UI
             },
             child: const Text('Save'),
           ),
