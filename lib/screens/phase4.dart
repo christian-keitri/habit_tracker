@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:habit_tracker/screens/habit.dart';
 import 'package:habit_tracker/screens/favorites.dart';
 import 'package:habit_tracker/screens/phase1.dart';
@@ -13,233 +12,216 @@ class Phase4 extends StatelessWidget {
   final List<Habit> habits;
   const Phase4({super.key, required this.habits});
 
-  List<FlSpot> _generateLineChartData(List<Habit> goodHabits) {
-    List<FlSpot> spots = [];
-    for (int i = 0; i < 7; i++) {
-      final date = DateTime.now().subtract(Duration(days: 6 - i));
-      final key = '${date.year}-${date.month}-${date.day}';
-      double total = 0;
-      int count = 0;
-      for (var habit in goodHabits) {
-        if (habit.dailyProgress.containsKey(key)) {
-          total += habit.dailyProgress[key]!;
-          count++;
-        }
-      }
-      spots.add(FlSpot((i + 1).toDouble(), count == 0 ? 0 : total / count));
-    }
-    return spots;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final goodHabits = habits.where((h) => !h.isBad).toList();
-    final badHabits = habits.where((h) => h.isBad).toList();
-
-    final Map<String, double> badHabitStats = {};
-    for (var habit in badHabits) {
-      double total = 0.0;
-      for (var value in habit.dailyProgress.values) {
-        total += value;
-      }
-      badHabitStats[habit.title] = total * 100;
-    }
-
     return Scaffold(
       drawer: _buildDrawer(context),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text('Stats.', style: TextStyle(color: Colors.white)),
+        title: const Text('Habit Statistics', style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset(
-              'assets/image/background4.png',
-              fit: BoxFit.cover,
-            ),
-          ),
+          Positioned.fill(child: Image.asset('assets/image/black.png', fit: BoxFit.cover)),
           SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: kToolbarHeight),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text("Good Habits Progress", style: TextStyle(color: Colors.white)),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          height: 200,
-                          child: LineChart(
-                            LineChartData(
-                              minX: 1,
-                              maxX: 7,
-                              backgroundColor: Colors.transparent,
-                              gridData: const FlGridData(show: false),
-                              titlesData: FlTitlesData(
-                                leftTitles: AxisTitles(
-                                  sideTitles: SideTitles(
-                                    showTitles: true,
-                                    getTitlesWidget: (value, _) {
-                                      if (value % 1 != 0) return const SizedBox.shrink();
-                                      return Text('${value.toInt()}',
-                                          style: const TextStyle(color: Colors.white, fontSize: 10));
-                                    },
-                                  ),
-                                ),
-
-                                bottomTitles: AxisTitles(
-  sideTitles: SideTitles(
-    showTitles: true,
-    getTitlesWidget: (value, _) {
-      int index = value.toInt();
-      if (index >= habits.length || habits[index].iconPath.isEmpty) {
-        return const SizedBox.shrink();
-      }
-      return Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: Image.asset(
-          habits[index].iconPath,
-          width: 24,
-          height: 24,
-        ),
-      );
-    },
-  ),
-),
-
-
-
-                              
-
-
-                                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                              ),
-                              borderData: FlBorderData(show: false),
-                              lineBarsData: [
-                                LineChartBarData(
-                                  spots: _generateLineChartData(goodHabits),
-                                  isCurved: true,
-                                  color: Colors.greenAccent,
-                                  barWidth: 3,
-                                  dotData: const FlDotData(show: true),
-                                ),
-                              ],
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: kToolbarHeight + 10),
+                  const Text("Habit Completion Bar Chart", style: TextStyle(color: Colors.white, fontSize: 18)),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 250,
+                    child: BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        gridData: const FlGridData(show: false),
+                        borderData: FlBorderData(show: false),
+                        titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, _) => Text('${value.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 10)),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 30),
-                        const Text("Bad Habits Pie Chart", style: TextStyle(color: Colors.white)),
-                        const SizedBox(height: 12),
-                        badHabitStats.isEmpty
-                            ? const Text("No bad habits yet 🎉", style: TextStyle(color: Colors.white))
-                            : SizedBox(
-                                height: 200,
-                                child: PieChart(
-                                  PieChartData(
-                                    sections: badHabitStats.entries.map((e) {
-                                      return PieChartSectionData(
-                                        title: '${e.key}\n${e.value.toInt()}%',
-                                        value: e.value,
-                                        color: _getColorForHabit(e.key),
-                                        radius: 60,
-                                        titleStyle: const TextStyle(color: Colors.black, fontSize: 12),
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              ),
-                        const SizedBox(height: 30),
-                        const Text("Habit Completion (Bar Chart)", style: TextStyle(color: Colors.white)),
-                        const SizedBox(height: 12),
-                      SizedBox(
-                        height: 250,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SizedBox(
-                            width: habits.length * 60, // Adjust 60 based on spacing
-                            child: BarChart(
-                              BarChartData(
-                                alignment: BarChartAlignment.spaceAround,
-                                gridData: const FlGridData(show: false),
-                                borderData: FlBorderData(show: false),
-                                titlesData: FlTitlesData(
-                                  leftTitles: AxisTitles(
-                                    sideTitles: SideTitles(
-                                      showTitles: true,
-                                      reservedSize: 28,
-                                      getTitlesWidget: (value, _) => Text(
-                                        '${value.toInt()}',
-                                        style: const TextStyle(color: Colors.white, fontSize: 10),
-                                      ),
-                                    ),
-                                  ),
-
-                                  bottomTitles: AxisTitles(
-  sideTitles: SideTitles(
-    showTitles: true,
-    getTitlesWidget: (value, _) {
-      int index = value.toInt();
-      if (index >= habits.length || habits[index].iconPath.isEmpty) {
-        return const SizedBox.shrink();
-      }
-      return Padding(
-        padding: const EdgeInsets.only(top: 6),
-        child: Image.asset(
-          habits[index].iconPath,
-          width: 24,
-          height: 24,
-        ),
-      );
-    },
-  ),
-),
-
-                                 
-                                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                ),
-                                barGroups: List.generate(habits.length, (index) {
-                                  final habit = habits[index];
-                                  final streak = _calculateStreak(habit).toDouble();
-                                  final completed = (habit.dailyProgress['${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}'] ?? 0) >= 1 ? 1.0 : 0.0;
-
-                                  return BarChartGroupData(
-                                    x: index,
-                                    barRods: [
-                                      BarChartRodData(
-                                        toY: streak,
-                                        width: 12,
-                                        color: Colors.greenAccent,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      BarChartRodData(
-                                        toY: completed * 5,
-                                        width: 4,
-                                        color: Colors.orangeAccent,
-                                        borderRadius: BorderRadius.circular(2),
-                                      ),
-                                    ],
-                                  );
-                                }),
-                              ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, _) {
+                                int index = value.toInt();
+                                if (index >= habits.length) return const SizedBox.shrink();
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Image.asset(habits[index].iconPath, width: 24, height: 24),
+                                );
+                              },
                             ),
                           ),
+                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                         ),
+                        barGroups: List.generate(habits.length, (index) {
+                          final habit = habits[index];
+                          final streak = habit.getStreak().toDouble();
+                          final todayKey = '${DateTime.now().year}-${DateTime.now().month}-${DateTime.now().day}';
+                          final completedToday = habit.dailyProgress[todayKey] != null &&
+                              habit.dailyProgress[todayKey]! >= (habit.dailyGoal ?? 1)
+                              ? 1.0
+                              : 0.0;
+
+                          return BarChartGroupData(x: index, barRods: [
+                            BarChartRodData(
+                              toY: streak,
+                              width: 16,
+                              color: Colors.lightGreenAccent,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            BarChartRodData(
+                              toY: completedToday * 5,
+                              width: 8,
+                              color: const Color.fromARGB(255, 70, 58, 43),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ]);
+                        }),
                       ),
-                      ],
                     ),
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 32),
+                  const Text("Habit Heatmap", style: TextStyle(color: Colors.white, fontSize: 18)),
+                  const SizedBox(height: 4),
+                  const Text("Each square represents a day. Green = completed any habit.",
+                      style: TextStyle(color: Colors.white70, fontSize: 12)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _buildLegendBox(Colors.green, "Completed"),
+                      const SizedBox(width: 16),
+                      _buildLegendBox(const Color.fromARGB(255, 255, 252, 252), "Missed"),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 24,
+                    runSpacing: 6,
+                    children: List.generate(30, (i) {
+                      final day = DateTime.now().subtract(Duration(days: 29 - i));
+                      final dayKey = '${day.year}-${day.month}-${day.day}';
+                      final completed = habits.any((habit) =>
+                          habit.dailyProgress[dayKey] != null &&
+                          habit.dailyProgress[dayKey]! >= (habit.dailyGoal ?? 1));
+
+                      return Container(
+                        width: 16,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: completed ? Colors.green : const Color.fromARGB(255, 245, 245, 245),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      );
+                    }),
+                  ),
+
+                  const SizedBox(height: 32),
+                  const Text("Weekly Trend (Line Chart)", style: TextStyle(color: Colors.white, fontSize: 18)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: const [
+                      Icon(Icons.show_chart, color: Colors.blueAccent, size: 16),
+                      SizedBox(width: 4),
+                      Text('Streaks', style: TextStyle(color: Colors.white)),
+                      SizedBox(width: 16),
+                      Icon(Icons.show_chart, color: Colors.orangeAccent, size: 16),
+                      SizedBox(width: 4),
+                      Text('Completion Rate', style: TextStyle(color: Colors.white)),
+                      SizedBox(width: 16),
+                      Icon(Icons.show_chart, color: Colors.redAccent, size: 16),
+                      SizedBox(width: 4),
+                      Text('Missed Days', style: TextStyle(color: Colors.white)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 220,
+                    child: LineChart(
+                      LineChartData(
+                        minX: 0,
+                        maxX: (habits.length - 1).toDouble(),
+                        minY: 0,
+                        maxY: 100,
+                        gridData: const FlGridData(show: false),
+                        titlesData: FlTitlesData(
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, _) {
+                                int index = value.toInt();
+                                if (index >= habits.length) return const SizedBox.shrink();
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Image.asset(habits[index].iconPath, width: 24, height: 24),
+                                );
+                              },
+                            ),
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: true, interval: 20, getTitlesWidget: (value, _) {
+                              return Text('${value.toInt()}', style: const TextStyle(color: Colors.white, fontSize: 10));
+                            }),
+                          ),
+                          topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                          rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        lineBarsData: [
+                          LineChartBarData(
+                            spots: List.generate(habits.length, (index) {
+                              final habit = habits[index];
+                              return FlSpot(index.toDouble(), habit.getStreak().toDouble() * 10);
+                            }),
+                            isCurved: true,
+                            color: Colors.blueAccent,
+                            barWidth: 3,
+                            dotData: const FlDotData(show: true),
+                          ),
+                          LineChartBarData(
+                            spots: List.generate(habits.length, (index) {
+                              final habit = habits[index];
+                              double rate = habit.getCompletionRate();
+                              return FlSpot(index.toDouble(), rate.isNaN ? 0.0 : rate);
+                            }),
+                            isCurved: true,
+                            color: Colors.orangeAccent,
+                            barWidth: 3,
+                            dotData: const FlDotData(show: true),
+                          ),
+                          LineChartBarData(
+                            spots: List.generate(habits.length, (index) {
+                              final habit = habits[index];
+                              final totalDays = habit.dailyProgress.length;
+                              final completedDays = habit.dailyProgress.values.where((v) => v >= (habit.dailyGoal ?? 1)).length;
+                              final missedDays = totalDays - completedDays;
+                              final percentMissed = totalDays == 0 ? 0.0 : (missedDays / totalDays) * 100;
+                              return FlSpot(index.toDouble(), percentMissed);
+                            }),
+                            isCurved: true,
+                            color: Colors.redAccent,
+                            barWidth: 3,
+                            dotData: const FlDotData(show: true),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -247,159 +229,103 @@ class Phase4 extends StatelessWidget {
     );
   }
 
-
-Drawer _buildDrawer(BuildContext context) {
-  return Drawer(
-    child: Stack(
+  Widget _buildLegendBox(Color color, String label) {
+    return Row(
       children: [
-        Positioned.fill(child: Image.asset('assets/image/drawer.png', fit: BoxFit.cover)),
-        ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.transparent),
-              child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
-            ),
-            ListTile(
-              leading: const Icon(Icons.check, color: Colors.white),
-              title: const Text('Your Daily Task', style: TextStyle(color: Colors.white)),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase2())),
-            ),
-            ListTile(
-              leading: const Icon(Icons.add_task, color: Colors.white),
-              title: const Text('Add Task', style: TextStyle(color: Colors.white)),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase3())),
-            ),
-            ListTile(
-              leading: const Icon(Icons.favorite, color: Colors.white),
-              title: const Text('Favorites', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                final favorites = habits.where((task) => task.isFavorite).toList();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => FavoritesScreen(
-                      favorites: favorites,
-                      onDelete: (habit) {
-                        habit.delete();
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.local_fire_department, color: Colors.white),
-              title: const Text('Streaks', style: TextStyle(color: Colors.white)),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StreaksScreen())),
-            ),
-            ListTile(
-              leading: const Icon(Icons.book, color: Colors.white),
-              title: const Text('Journal', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                if (habits.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("No habits available for journal.")),
-                  );
-                } else {
-                  showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Colors.white,
-                    builder: (context) => ListView(
-                      children: habits.map((habit) {
-                        return ListTile(
-                          leading: habit.iconPath.isNotEmpty
-                              ? Image.asset(habit.iconPath, width: 24, height: 24)
-                              : const Icon(Icons.bookmark),
-                          title: Text(habit.title),
-                          onTap: () {
-                            Navigator.pop(context); // close bottom sheet
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => JournalScreen(habit: habit),
-                              ),
-                            );
-                          },
-                        );
-                      }).toList(),
-                    ),
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.refresh, color: Colors.white),
-              title: const Text('Reset All Data', style: TextStyle(color: Colors.white)),
-              onTap: () async {
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Reset All Data"),
-                    content: const Text("Are you sure you want to delete all habits and start over?"),
-                    actions: [
-                      TextButton(child: const Text("Cancel"), onPressed: () => Navigator.of(context).pop(false)),
-                      TextButton(child: const Text("Confirm", style: TextStyle(color: Colors.red)), onPressed: () => Navigator.of(context).pop(true)),
-                    ],
-                  ),
-                );
-
-                if (confirmed == true) {
-                  final habitBox = Hive.box<Habit>('habits');
-                  await habitBox.clear();
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("All habits have been reset.")),
-                    );
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const Phase4(habits: [])),
-                    );
-                  }
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.exit_to_app, color: Colors.white),
-              title: const Text('Exit', style: TextStyle(color: Colors.white)),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase1())),
-            ),
-          ],
-        ),
+        Container(width: 16, height: 16, color: color, margin: const EdgeInsets.only(right: 4)),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
       ],
-    ),
-  );
-}
-
-
-
-  Color _getColorForHabit(String habit) {
-    switch (habit.toLowerCase()) {
-      case 'smoking':
-        return Colors.red;
-      case 'procrastinating':
-        return Colors.orange;
-      case 'drinking alcohol':
-        return Colors.purple;
-      default:
-        return const Color.fromARGB(255, 54, 226, 175);
-    }
+    );
   }
 
-  int _calculateStreak(Habit habit) {
-    int streak = 0;
-    DateTime today = DateTime.now();
-    for (int i = 0; i < 365; i++) {
-      final date = today.subtract(Duration(days: i));
-      final key = '${date.year}-${date.month}-${date.day}';
-      final progress = habit.dailyProgress[key] ?? 0.0;
-      if (progress >= 1.0) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
+  Drawer _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: Stack(
+        children: [
+          Positioned.fill(child: Image.asset('assets/image/black.png', fit: BoxFit.cover)),
+          ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              const DrawerHeader(
+                decoration: BoxDecoration(color: Colors.transparent),
+                child: Text('Menu', style: TextStyle(color: Colors.white, fontSize: 24)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.check, color: Colors.white),
+                title: const Text('Your Daily Task', style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase2())),
+              ),
+              ListTile(
+                leading: const Icon(Icons.add_task, color: Colors.white),
+                title: const Text('Add Task', style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase3())),
+              ),
+              ListTile(
+                leading: const Icon(Icons.favorite, color: Colors.white),
+                title: const Text('Favorites', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  final favorites = habits.where((task) => task.isFavorite).toList();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FavoritesScreen(
+                        favorites: favorites,
+                        onDelete: (habit) {
+                          habit.delete();
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.local_fire_department, color: Colors.white),
+                title: const Text('Streaks', style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StreaksScreen())),
+              ),
+              ListTile(
+                leading: const Icon(Icons.book, color: Colors.white),
+                title: const Text('Journal', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  if (habits.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("No habits available for journal.")),
+                    );
+                  } else {
+                    showModalBottomSheet(
+                      context: context,
+                      backgroundColor: const Color.fromARGB(255, 15, 15, 15),
+                      builder: (context) => ListView(
+                        children: habits.map((habit) {
+                          return ListTile(
+                            leading: habit.iconPath.isNotEmpty
+                                ? Image.asset(habit.iconPath, width: 24, height: 24)
+                                : const Icon(Icons.bookmark),
+                            title: Text(habit.title, style: const TextStyle(color: Colors.white)),
+                            onTap: () {
+                              Navigator.pop(context);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => JournalScreen(habit: habit)),
+                              );
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    );
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.exit_to_app, color: Colors.white),
+                title: const Text('Exit', style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase1())),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

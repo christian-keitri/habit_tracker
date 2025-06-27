@@ -91,7 +91,7 @@ class _JournalScreenState extends State<JournalScreen> {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/image/journalbg.png'),
+          image: AssetImage('assets/image/black.png'),
           fit: BoxFit.cover,
         ),
       ),
