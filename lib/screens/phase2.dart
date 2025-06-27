@@ -69,7 +69,7 @@ class _Phase2State extends State<Phase2> {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/image/background2.png'),
+          image: AssetImage('assets/image/black.png'),
           fit: BoxFit.cover,
         ),
       ),
@@ -135,7 +135,7 @@ class _Phase2State extends State<Phase2> {
                           final currentValue = habit.dailyProgress[key] ?? 0;
 
                           return Card(
-                            color: Colors.white.withAlpha(25),
+                            color: const Color.fromARGB(255, 248, 246, 246).withAlpha(25),
                             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                             child: ListTile(
                               leading: habit.iconPath.isNotEmpty
@@ -263,14 +263,20 @@ class _Phase2State extends State<Phase2> {
             ],
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: const Color.fromARGB(255, 247, 248, 247),
-          child: const Icon(Icons.add),
-          onPressed: () async {
-            await Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase3()));
-            setState(() {});
-          },
-        ),
+      floatingActionButton: FloatingActionButton(
+  backgroundColor: Colors.transparent, // 🔧 Change to your preferred color
+  elevation: 0, // Optional: remove shadow if you want flat look
+  child: const Icon(
+    Icons.add,
+    color: Colors.white,  // 🔧 Change icon color here
+    size: 36,             // 🔧 Change icon size here
+  ),
+  onPressed: () async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase3()));
+    setState(() {});
+  },
+),
+
       ),
     );
   }
@@ -279,7 +285,7 @@ class _Phase2State extends State<Phase2> {
     return Drawer(
       child: Stack(
         children: [
-          Positioned.fill(child: Image.asset('assets/image/drawer.png', fit: BoxFit.cover)),
+          Positioned.fill(child: Image.asset('assets/image/black.png', fit: BoxFit.cover)),
           ListView(
             padding: EdgeInsets.zero,
             children: [
@@ -328,14 +334,15 @@ class _Phase2State extends State<Phase2> {
                   } else {
                     showModalBottomSheet(
                       context: context,
-                      backgroundColor: Colors.white,
+                      backgroundColor: const Color.fromARGB(255, 10, 10, 10),
                       builder: (context) => ListView(
                         children: habits.map((habit) {
                           return ListTile(
                             leading: habit.iconPath.isNotEmpty
                                 ? Image.asset(habit.iconPath, width: 24, height: 24)
                                 : const Icon(Icons.bookmark),
-                            title: Text(habit.title),
+                            title: Text(habit.title,
+                            style: const TextStyle(color: Colors.white),),
                             onTap: () {
                               Navigator.pop(context);
                               Navigator.push(

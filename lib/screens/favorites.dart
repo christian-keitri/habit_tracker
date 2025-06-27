@@ -44,7 +44,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
         children: [
           Positioned.fill(
             child: Image.asset(
-              'assets/image/favorites.png',
+              'assets/image/black.png',
               fit: BoxFit.cover,
             ),
           ),

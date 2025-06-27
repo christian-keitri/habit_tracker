@@ -24,7 +24,7 @@ class _Phase1State extends State<Phase1> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/image/background.png"),
+            image: AssetImage("assets/image/black.png"),
             fit: BoxFit.cover,
           ),
         ),
@@ -57,15 +57,15 @@ class _Phase1State extends State<Phase1> {
                     children: [
                       TextSpan(
                         text: 'MAKE IT A\n',
-                        style: TextStyle(fontSize: 24, color: Colors.black),
+                        style: TextStyle(fontSize: 24, color: Color.fromARGB(255, 252, 251, 251)),
                       ),
                       TextSpan(
                         text: 'HABIT\n',
-                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black),
+                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color.fromARGB(255, 243, 242, 242)),
                       ),
                       TextSpan(
                         text: 'TRACK IT',
-                        style: TextStyle(fontSize: 24, color: Colors.black),
+                        style: TextStyle(fontSize: 24, color: Color.fromARGB(255, 252, 251, 251)),
                       ),
                     ],
                   ),
@@ -76,7 +76,7 @@ class _Phase1State extends State<Phase1> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20,
-                    color: Color.fromARGB(255, 15, 14, 14),
+                    color: Color.fromARGB(255, 238, 236, 236),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -90,8 +90,8 @@ class _Phase1State extends State<Phase1> {
                   },
                   child: const Icon(
                     Icons.add_circle,
-                    size: 56,
-                    color: Color.fromARGB(255, 17, 17, 17),
+                    size: 30,
+                    color: Color.fromARGB(255, 240, 240, 240),
                   ),
                 ),
               ],

@@ -42,7 +42,7 @@ class StreaksScreen extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/image/qoutes.png'),
+          image: AssetImage('assets/image/black.png'),
           fit: BoxFit.cover,
         ),
       ),
