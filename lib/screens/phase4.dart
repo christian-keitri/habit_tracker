@@ -7,6 +7,8 @@ import 'package:habit_tracker/screens/phase2.dart';
 import 'package:habit_tracker/screens/phase3.dart';
 import 'package:habit_tracker/screens/streaks.dart';
 import 'package:habit_tracker/screens/journal_screen.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:habit_tracker/screens/journal.dart';
 
 class Phase4 extends StatelessWidget {
   final List<Habit> habits;
@@ -238,6 +240,33 @@ class Phase4 extends StatelessWidget {
     );
   }
 
+  void resetData(BuildContext context, List<Habit> habits) async {
+  final navigator = Navigator.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+
+  // Clear habits
+  for (var habit in habits) {
+    await habit.delete();
+  }
+
+  // Clear journal entries too
+  final journalBox = Hive.box<JournalEntry>('journals');
+  await journalBox.clear();
+
+  messenger.showSnackBar(
+    const SnackBar(content: Text("All data has been reset.")),
+  );
+
+  navigator.pushAndRemoveUntil(
+    MaterialPageRoute(builder: (_) => const Phase2()),
+    (route) => false,
+  );
+}
+
+
+
+
+
   Drawer _buildDrawer(BuildContext context) {
     return Drawer(
       child: Stack(
@@ -317,6 +346,36 @@ class Phase4 extends StatelessWidget {
                   }
                 },
               ),
+
+              ListTile(
+                leading: const Icon(Icons.refresh, color: Colors.white),
+                title: const Text('Reset Data', style: TextStyle(color: Colors.white)),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      backgroundColor: Colors.black87,
+                      title: const Text('Confirm Reset', style: TextStyle(color: Colors.white)),
+                      content: const Text('Are you sure you want to delete all data?', style: TextStyle(color: Colors.white70)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(ctx); // close dialog
+                            resetData(context, habits);// call the method
+                          },
+                          child: const Text('Reset', style: TextStyle(color: Colors.redAccent)),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+
+
               ListTile(
                 leading: const Icon(Icons.exit_to_app, color: Colors.white),
                 title: const Text('Exit', style: TextStyle(color: Colors.white)),

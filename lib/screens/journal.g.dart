@@ -20,19 +20,25 @@ class JournalEntryAdapter extends TypeAdapter<JournalEntry> {
       habitId: fields[0] as String,
       content: fields[1] as String,
       date: fields[2] as DateTime,
+      mood: fields[3] as String,
+      emoji: fields[4] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, JournalEntry obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.habitId)
       ..writeByte(1)
       ..write(obj.content)
       ..writeByte(2)
-      ..write(obj.date);
+      ..write(obj.date)
+      ..writeByte(3)
+      ..write(obj.mood)
+      ..writeByte(4)
+      ..write(obj.emoji);
   }
 
   @override
