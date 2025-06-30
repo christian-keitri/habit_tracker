@@ -17,6 +17,13 @@ class _JournalScreenState extends State<JournalScreen> {
   late Box<JournalEntry> journalBox;
   List<JournalEntry> entries = [];
 
+  // Mood and Emoji State
+  String _selectedMood = 'Happy';
+  String _selectedEmoji = '😊';
+
+  final List<String> moods = ['Happy', 'Sad', 'Anxious', 'Excited'];
+  final List<String> emojis = ['😊', '😢', '😰', '🤩'];
+
   @override
   void initState() {
     super.initState();
@@ -38,9 +45,13 @@ class _JournalScreenState extends State<JournalScreen> {
       habitId: widget.habit.key.toString(),
       content: content,
       date: DateTime.now(),
+      mood: _selectedMood,
+      emoji: _selectedEmoji,
     );
     journalBox.add(newEntry);
     _controller.clear();
+    _selectedMood = 'Happy';
+    _selectedEmoji = '😊';
     _loadEntries();
   }
 
@@ -131,7 +142,41 @@ class _JournalScreenState extends State<JournalScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Text("Mood:", style: TextStyle(color: Colors.white70)),
+                  const SizedBox(width: 8),
+                  DropdownButton<String>(
+                    dropdownColor: Colors.black87,
+                    value: _selectedMood,
+                    style: const TextStyle(color: Colors.white),
+                    items: moods.map((mood) {
+                      return DropdownMenuItem(
+                        value: mood,
+                        child: Text(mood),
+                      );
+                    }).toList(),
+                    onChanged: (val) => setState(() => _selectedMood = val ?? 'Happy'),
+                  ),
+                  const SizedBox(width: 20),
+                  const Text("Emoji:", style: TextStyle(color: Colors.white70)),
+                  const SizedBox(width: 8),
+                  DropdownButton<String>(
+                    dropdownColor: Colors.black87,
+                    value: _selectedEmoji,
+                    style: const TextStyle(fontSize: 20),
+                    items: emojis.map((e) {
+                      return DropdownMenuItem(
+                        value: e,
+                        child: Text(e),
+                      );
+                    }).toList(),
+                    onChanged: (val) => setState(() => _selectedEmoji = val ?? '😊'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               const Text(
                 'Previous Entries',
                 style: TextStyle(
@@ -156,19 +201,28 @@ class _JournalScreenState extends State<JournalScreen> {
                             color: Colors.white24,
                             child: ListTile(
                               title: Text(
-                                entry.content,
+                                '${entry.emoji} ${entry.content}',
                                 style: const TextStyle(color: Colors.white),
                               ),
-                              subtitle: Text(
-                                entry.date
-                                    .toLocal()
-                                    .toString()
-                                    .split('.')
-                                    .first,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Mood: ${entry.mood}',
+                                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                  ),
+                                  Text(
+                                    entry.date
+                                        .toLocal()
+                                        .toString()
+                                        .split('.')
+                                        .first,
+                                    style: const TextStyle(
+                                      color: Colors.white60,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
                               ),
                               trailing: IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.redAccent),

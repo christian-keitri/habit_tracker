@@ -7,7 +7,7 @@ import 'package:habit_tracker/screens/favorites.dart';
 import 'package:habit_tracker/screens/phase4.dart';
 import 'package:habit_tracker/screens/streaks.dart';
 import 'package:habit_tracker/screens/journal_screen.dart';
-import 'package:habit_tracker/screens/journal.dart'; // Ensure this is your JournalEntry model
+import 'package:habit_tracker/screens/journal.dart';
 
 class Phase2 extends StatefulWidget {
   const Phase2({super.key});
@@ -30,14 +30,11 @@ class _Phase2State extends State<Phase2> {
 
   void _loadJournalDates() {
     final journalBox = Hive.box<JournalEntry>('journals');
-    final entries = journalBox.values;
-
     final dates = <DateTime>{};
-    for (var entry in entries) {
+    for (var entry in journalBox.values) {
       final date = DateTime(entry.date.year, entry.date.month, entry.date.day);
       dates.add(date);
     }
-
     setState(() {
       _journalDates.clear();
       _journalDates.addAll(dates);
@@ -98,29 +95,79 @@ class _Phase2State extends State<Phase2> {
                     _focusedDay = foc;
                   });
                 },
-                eventLoader: _getEventsForDay,
                 onFormatChanged: (fmt) => setState(() => _calendarFormat = fmt),
+                eventLoader: _getEventsForDay,
+                calendarBuilders: CalendarBuilders(
+                markerBuilder: (context, date, events) {
+                  if (events.isNotEmpty) {
+                    final journalBox = Hive.box<JournalEntry>('journals');
+                    final entry = journalBox.values.firstWhere(
+                      (e) => isSameDay(e.date, date),
+                      orElse: () => JournalEntry(
+                        habitId: '',
+                        content: '',
+                        date: date,
+                        mood: '',
+                        emoji: '',
+                      ),
+                    );
+
+                    if (entry.emoji.isNotEmpty) {
+                      // Show emoji below the date without covering it
+                      return Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 25),
+                          child: Text(
+                            entry.emoji,
+                            style: const TextStyle(fontSize: 15),
+                          ),
+                        ),
+                      );
+                    }
+
+                    // Default small dot
+                    return Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 25),
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.yellowAccent,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
                 headerStyle: const HeaderStyle(
                   titleTextStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
                   leftChevronIcon: Icon(Icons.chevron_left, color: Colors.white),
                   rightChevronIcon: Icon(Icons.chevron_right, color: Colors.white),
                   formatButtonVisible: true,
-                  formatButtonShowsNext: false,
-                  formatButtonDecoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.all(Radius.circular(6))),
-                  formatButtonTextStyle: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  formatButtonDecoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.all(Radius.circular(6)),
+                  ),
+                  formatButtonTextStyle: TextStyle(color: Colors.white),
                 ),
                 calendarStyle: const CalendarStyle(
                   markerDecoration: BoxDecoration(color: Colors.yellowAccent, shape: BoxShape.circle),
                   todayDecoration: BoxDecoration(color: Color.fromARGB(255, 148, 223, 129), shape: BoxShape.circle),
                   selectedDecoration: BoxDecoration(color: Color.fromARGB(255, 42, 153, 17), shape: BoxShape.circle),
-                  defaultTextStyle: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-                  weekendTextStyle: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
-                  selectedTextStyle: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-                  todayTextStyle: TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),
+                  defaultTextStyle: TextStyle(color: Colors.white),
+                  weekendTextStyle: TextStyle(color: Colors.red),
+                  selectedTextStyle: TextStyle(color: Colors.white),
+                  todayTextStyle: TextStyle(color: Colors.black),
                 ),
                 daysOfWeekStyle: const DaysOfWeekStyle(
-                  weekdayStyle: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
-                  weekendStyle: TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.w600),
+                  weekdayStyle: TextStyle(color: Colors.white70),
+                  weekendStyle: TextStyle(color: Colors.redAccent),
                 ),
               ),
               const SizedBox(height: 10),
@@ -135,30 +182,38 @@ class _Phase2State extends State<Phase2> {
                           final currentValue = habit.dailyProgress[key] ?? 0;
 
                           return Card(
-                            color: const Color.fromARGB(255, 248, 246, 246).withAlpha(25),
+                            color: Colors.white.withAlpha(25),
                             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                             child: ListTile(
                               leading: habit.iconPath.isNotEmpty
                                   ? Image.asset(habit.iconPath, width: 32, height: 32)
                                   : null,
                               title: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
-                                    child: Text(
-                                      habit.title,
-                                      style: const TextStyle(color: Colors.white),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                                    child: Text(habit.title,
+                                        style: const TextStyle(color: Colors.white),
+                                        overflow: TextOverflow.ellipsis),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.local_fire_department, color: Colors.orangeAccent, size: 18),
+                                      const SizedBox(width: 4),
+                                      Text('${habit.getStreak()}',
+                                          style: const TextStyle(
+                                            color: Colors.orangeAccent,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          )),
+                                    ],
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.book, color: Colors.white70, size: 20),
                                     onPressed: () {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(
-                                          builder: (_) => JournalScreen(habit: habit),
-                                        ),
+                                        MaterialPageRoute(builder: (_) => JournalScreen(habit: habit)),
                                       ).then((_) => _loadJournalDates());
                                     },
                                   ),
@@ -177,10 +232,7 @@ class _Phase2State extends State<Phase2> {
                                           }
                                         },
                                       ),
-                                      Text(
-                                        '$currentValue / ${habit.dailyGoal}',
-                                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                                      ),
+                                      Text('$currentValue / ${habit.dailyGoal}', style: const TextStyle(color: Colors.white)),
                                       IconButton(
                                         icon: const Icon(Icons.add, color: Colors.white),
                                         onPressed: () {
@@ -214,24 +266,6 @@ class _Phase2State extends State<Phase2> {
                                         '${((currentValue / (habit.dailyGoal ?? 1)) * 100).clamp(0, 100).toInt()}%',
                                         style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
                                       ),
-                                      const SizedBox(width: 12),
-                                      Row(
-                                        children: [
-                                          const Icon(Icons.local_fire_department, color: Colors.orangeAccent, size: 20),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '${habit.getStreak()}',
-                                            style: const TextStyle(
-                                              color: Colors.orangeAccent,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                              shadows: [
-                                                Shadow(blurRadius: 2, color: Colors.black45, offset: Offset(1, 1)),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
                                     ],
                                   ),
                                   Row(
@@ -239,17 +273,17 @@ class _Phase2State extends State<Phase2> {
                                       if (habit.isDailyRoutine)
                                         const Padding(
                                           padding: EdgeInsets.only(right: 8),
-                                          child: Text('Daily', style: TextStyle(color: Colors.greenAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                                          child: Text('Daily', style: TextStyle(color: Colors.greenAccent)),
                                         ),
                                       if (habit.isWeeklyRoutine)
                                         const Padding(
                                           padding: EdgeInsets.only(right: 8),
-                                          child: Text('Weekly', style: TextStyle(color: Colors.lightBlueAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                                          child: Text('Weekly', style: TextStyle(color: Colors.lightBlueAccent)),
                                         ),
                                       if (habit.isMonthlyRoutine)
                                         const Padding(
                                           padding: EdgeInsets.only(right: 8),
-                                          child: Text('Monthly', style: TextStyle(color: Colors.orangeAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                                          child: Text('Monthly', style: TextStyle(color: Colors.orangeAccent)),
                                         ),
                                     ],
                                   ),
@@ -263,20 +297,15 @@ class _Phase2State extends State<Phase2> {
             ],
           ),
         ),
-      floatingActionButton: FloatingActionButton(
-  backgroundColor: Colors.transparent, // 🔧 Change to your preferred color
-  elevation: 0, // Optional: remove shadow if you want flat look
-  child: const Icon(
-    Icons.add,
-    color: Colors.white,  // 🔧 Change icon color here
-    size: 36,             // 🔧 Change icon size here
-  ),
-  onPressed: () async {
-    await Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase3()));
-    setState(() {});
-  },
-),
-
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: const Icon(Icons.add, color: Colors.white, size: 36),
+          onPressed: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => const Phase3()));
+            setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -341,8 +370,7 @@ class _Phase2State extends State<Phase2> {
                             leading: habit.iconPath.isNotEmpty
                                 ? Image.asset(habit.iconPath, width: 24, height: 24)
                                 : const Icon(Icons.bookmark),
-                            title: Text(habit.title,
-                            style: const TextStyle(color: Colors.white),),
+                            title: Text(habit.title, style: const TextStyle(color: Colors.white)),
                             onTap: () {
                               Navigator.pop(context);
                               Navigator.push(

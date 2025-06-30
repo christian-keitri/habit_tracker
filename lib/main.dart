@@ -8,11 +8,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
-  // Register Hive adapters (make sure these are generated properly)
+  // Register Hive adapters (must match your model's typeId)
   Hive.registerAdapter(HabitAdapter());
   Hive.registerAdapter(JournalEntryAdapter());
 
-  // Open required boxes
+
+  // Open Hive boxes
   await Hive.openBox<Habit>('habits');
   await Hive.openBox<JournalEntry>('journals');
 
@@ -31,7 +32,7 @@ class HabitTrackerApp extends StatelessWidget {
         primarySwatch: Colors.teal,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: const Phase1(), // You can change this to Phase2(), Phase4(), etc.
+      home: const Phase1(), // Change to Phase2, Phase3, etc. during testing
     );
   }
 }
